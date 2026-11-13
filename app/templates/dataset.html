@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dataset Upload | Indian Coin Recognition</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success { color: #176b35; } .error { color: #a51d2d; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; }
+    .sample { width: 100%; max-height: 180px; object-fit: contain; background: #f4f4f4; }
+    code { background: #f4f4f4; padding: 2px 5px; }
+  </style>
+</head>
+<body>
+  <h1>Indian Coin Recognition</h1>
+  <p>Module 1 — Dataset Upload and Dataset Preview</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <p class="{{ category }}"><strong>{{ message }}</strong></p>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="card">
+    <h2>Upload Dataset</h2>
+    <form action="{{ url_for('dataset.upload') }}" method="post" enctype="multipart/form-data">
+      <input type="file" name="dataset" accept=".zip" required>
+      <button type="submit">Upload & Preview</button>
+    </form>
+    <p>Expected structure: <code>dataset/category_name/image.jpg</code></p>
+  </div>
+
+  {% if dataset %}
+  <div class="card">
+    <h2>Dataset Summary</h2>
+    <p><strong>Categories:</strong> {{ dataset.categories|length }}</p>
+    <p><strong>Total valid images:</strong> {{ dataset.total_images }}</p>
+    <p><strong>Invalid/corrupt images:</strong> {{ dataset.invalid_files|length }}</p>
+  </div>
+
+  <div class="card">
+    <h2>Categories & Samples</h2>
+    {% for category, info in dataset.categories.items() %}
+      <section>
+        <h3>{{ category }} — {{ info.count }} images</h3>
+        <div class="grid">
+          {% for sample in info.samples %}
+            <div>
+              <p><code>{{ sample }}</code></p>
+              <p>Sample selected from uploaded dataset.</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+  {% endif %}
+</body>
+</html>
