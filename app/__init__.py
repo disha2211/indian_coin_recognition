@@ -22,6 +22,7 @@ def create_app() -> Flask:
 
     @app.errorhandler(413)
     def too_large(_error):
-        return "Dataset is too large. Maximum upload size is 512 MB.", 413
+        limit_gib = MAX_CONTENT_LENGTH / (1024 ** 3)
+        return f"Dataset is too large. Maximum upload size is {limit_gib:.1f} GiB. Increase MAX_UPLOAD_BYTES if needed.", 413
 
     return app

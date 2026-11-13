@@ -1,15 +1,16 @@
-from pathlib import Path
+from uuid import uuid4
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from werkzeug.utils import secure_filename
 
-from app.config import ALLOWED_DATASET_EXTENSIONS, UPLOAD_DIR
+from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
 
 bp = Blueprint("dataset", __name__)
 
 
 def allowed_dataset(filename: str) -> bool:
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_DATASET_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() == "zip"
 
 
 @bp.get("/")
@@ -28,17 +29,30 @@ def upload():
         flash("Invalid dataset format. Only ZIP files are supported.", "error")
         return redirect(url_for("dataset.index"))
 
-    upload_path = UPLOAD_DIR / uploaded.filename
-    uploaded.save(upload_path)
+    # Never trust the user-provided filename; use a unique server-side name.
+    safe_name = secure_filename(uploaded.filename) or "dataset.zip"
+    upload_path = UPLOAD_DIR / f"{uuid4().hex}_{safe_name}"
 
     try:
+        # Werkzeug streams the incoming multipart file to its temporary storage;
+        # save() copies it to disk rather than reading the entire archive into RAM.
+        uploaded.save(upload_path)
         metadata = inspect_dataset(upload_path)
         current_app.config["CURRENT_DATASET"] = metadata
-        flash("Dataset uploaded and validated successfully.", "success")
+        flash("Dataset uploaded, extracted and validated successfully.", "success")
         return render_template("dataset.html", dataset=metadata)
     except ValueError as exc:
         flash(str(exc), "error")
+    except OSError:
+        current_app.logger.exception("Dataset storage operation failed")
+        flash("Not enough disk space or permission to store the dataset.", "error")
     except Exception:
         current_app.logger.exception("Dataset processing failed")
-        flash("The dataset could not be processed. Check the ZIP structure and image files.", "error")
+        flash("The dataset could not be processed. Check the ZIP structure and available disk space.", "error")
+    finally:
+        # Keep the ZIP only if required for audit/retry? For this phase, extracted
+        # files and metadata are sufficient, so remove the temporary archive.
+        if upload_path.exists():
+            upload_path.unlink(missing_ok=True)
+
     return redirect(url_for("dataset.index"))

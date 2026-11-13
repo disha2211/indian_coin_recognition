@@ -30,6 +30,7 @@
       <button type="submit">Upload & Preview</button>
     </form>
     <p>Expected structure: <code>dataset/category_name/image.jpg</code></p>
+    <p>Configured upload limit: 10 GiB. Extraction limit: 50 GiB. These limits can be changed using environment variables.</p>
   </div>
 
   {% if dataset %}
@@ -37,7 +38,8 @@
     <h2>Dataset Summary</h2>
     <p><strong>Categories:</strong> {{ dataset.categories|length }}</p>
     <p><strong>Total valid images:</strong> {{ dataset.total_images }}</p>
-    <p><strong>Invalid/corrupt images:</strong> {{ dataset.invalid_files|length }}</p>
+    <p><strong>Image files found:</strong> {{ dataset.total_image_candidates }}</p>
+    <p><strong>Invalid/corrupt images:</strong> {{ dataset.invalid_image_count }}</p>
   </div>
 
   <div class="card">
