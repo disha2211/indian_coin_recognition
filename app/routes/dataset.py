@@ -1,5 +1,6 @@
 from uuid import uuid4
 from app.services.afe_service import extract_afe_dataset
+from app.services.split_service import create_or_load_split
 
 from flask import (
     Blueprint,
@@ -28,6 +29,7 @@ def index():
     dataset = current_app.config.get("CURRENT_DATASET")
     preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
     afe = current_app.config.get("CURRENT_AFE")
+    split = current_app.config.get("CURRENT_SPLIT")
 
     if dataset is None:
         state = load_project_state()
@@ -51,6 +53,7 @@ def index():
         dataset=dataset,
         preprocessing=preprocessing,
         afe=afe,
+        split=split,
     )
 
 @bp.post("/upload")
@@ -213,6 +216,62 @@ def run_afe():
         flash(
             "Adaptive Feature Enhancement failed. "
             "Check the dataset and available disk space.",
+            "error",
+        )
+
+    return redirect(url_for("dataset.index"))
+
+@bp.post("/split")
+def run_split():
+    dataset = current_app.config.get("CURRENT_DATASET")
+    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+    afe = current_app.config.get("CURRENT_AFE")
+
+    if not dataset:
+        flash("Please upload a dataset first.", "error")
+        return redirect(url_for("dataset.index"))
+
+    if not preprocessing or not afe:
+        flash(
+            "Complete preprocessing and AFE before creating the split.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        metadata = create_or_load_split(dataset)
+
+        current_app.config["CURRENT_SPLIT"] = metadata
+
+        state = load_project_state() or {}
+        state["dataset"] = dataset
+        state["preprocessing"] = preprocessing
+        state["afe"] = afe
+        state["split"] = metadata
+
+        save_project_state(state)
+
+        if metadata.get("reused_existing"):
+            flash("Existing valid train/test split loaded successfully.", "success")
+        else:
+            flash("Stratified train/test split created successfully.", "success")
+
+        return render_template(
+            "dataset.html",
+            dataset=dataset,
+            preprocessing=preprocessing,
+            afe=afe,
+            split=metadata,
+        )
+
+    except (FileNotFoundError, ValueError) as exc:
+        current_app.logger.exception("Train/test split validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Train/test split failed")
+        flash(
+            "Could not create the train/test split. Check the logs.",
             "error",
         )
 

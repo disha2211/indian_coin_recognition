@@ -48,6 +48,12 @@ AFE_LBP_POINTS = 8
 AFE_LBP_RADIUS = 1
 
 
+# Train/Test Split
+SPLIT_DIRNAME = "split"
+TRAIN_INDICES_FILENAME = "train_indices.npy"
+TEST_INDICES_FILENAME = "test_indices.npy"
+SPLIT_METADATA_FILENAME = "split_metadata.json"
+
 
 # Override these through environment variables when deploying on a machine
 # with more/less disk capacity. These are byte limits, not RAM allocations.

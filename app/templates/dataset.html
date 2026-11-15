@@ -151,6 +151,63 @@
       </p>
     </section>
   </div>
+
+  {% if afe %}
+<section>
+    <h2>Train/Test Split</h2>
+
+    <p>
+        Divide the AFE feature dataset into training and testing
+        sets using stratified sampling.
+    </p>
+
+    <form method="POST" action="{{ url_for('dataset.run_split') }}">
+        <button type="submit">Create Train/Test Split</button>
+    </form>
+</section>
+{% endif %}
+
+{% if split %}
+<section>
+    <h2>Train/Test Split Results</h2>
+
+    <p><strong>Method:</strong> {{ split.method }}</p>
+    <p><strong>Total samples:</strong> {{ split.total_samples }}</p>
+    <p><strong>Training samples:</strong> {{ split.training_samples }}</p>
+    <p><strong>Testing samples:</strong> {{ split.testing_samples }}</p>
+    <p><strong>Training ratio:</strong> {{ split.train_size * 100 }}%</p>
+    <p><strong>Testing ratio:</strong> {{ split.test_size * 100 }}%</p>
+    <p><strong>Random state:</strong> {{ split.random_state }}</p>
+    <p><strong>Stratified:</strong> {{ "Yes" if split.stratified else "No" }}</p>
+
+    <h3>Class Distribution</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Total</th>
+                <th>Training</th>
+                <th>Testing</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, total in split.class_distribution.total.items() %}
+            <tr>
+                <td>{{ category }}</td>
+                <td>{{ total }}</td>
+                <td>{{ split.class_distribution.training[category] }}</td>
+                <td>{{ split.class_distribution.testing[category] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if split.reused_existing %}
+    <p>Previously saved split reused. No new split was generated.</p>
+    {% endif %}
+</section>
+{% endif %}
   {% endif %}
 </body>
 </html>
