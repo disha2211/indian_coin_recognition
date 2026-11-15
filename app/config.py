@@ -15,6 +15,15 @@ IMAGE_SIZE = (128, 128)
 TEST_SIZE = 0.20
 RANDOM_STATE = 42
 
+PREPROCESS_DTYPE = "float32"
+NORMALIZATION_SCALE = 255.0
+PREPROCESS_BATCH_SIZE = 32
+
+PREPROCESS_METADATA_FILENAME = "preprocessing_metadata.json"
+PROCESSED_IMAGES_FILENAME = "images.npy"
+PROCESSED_LABELS_FILENAME = "labels.npy"
+CLASS_MAPPING_FILENAME = "class_mapping.json"
+
 # Override these through environment variables when deploying on a machine
 # with more/less disk capacity. These are byte limits, not RAM allocations.
 MAX_CONTENT_LENGTH = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024**3)))  # 10 GiB

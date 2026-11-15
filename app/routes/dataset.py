@@ -1,10 +1,19 @@
 from uuid import uuid4
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from werkzeug.utils import secure_filename
 
 from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
+from app.services.preprocessing_service import preprocess_dataset
 
 bp = Blueprint("dataset", __name__)
 
@@ -12,11 +21,13 @@ bp = Blueprint("dataset", __name__)
 def allowed_dataset(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() == "zip"
 
-
 @bp.get("/")
 def index():
-    return render_template("dataset.html", dataset=None)
-
+    return render_template(
+            "dataset.html",
+            dataset=current_app.config.get("CURRENT_DATASET"),
+            preprocessing=current_app.config.get("CURRENT_PREPROCESSING"),
+        )
 
 @bp.post("/upload")
 def upload():
@@ -40,7 +51,11 @@ def upload():
         metadata = inspect_dataset(upload_path)
         current_app.config["CURRENT_DATASET"] = metadata
         flash("Dataset uploaded, extracted and validated successfully.", "success")
-        return render_template("dataset.html", dataset=metadata)
+        return render_template(
+                        "dataset.html",
+                        dataset=metadata,
+                        preprocessing=None,
+                    )
     except ValueError as exc:
         flash(str(exc), "error")
     except OSError:
@@ -54,5 +69,45 @@ def upload():
         # files and metadata are sufficient, so remove the temporary archive.
         if upload_path.exists():
             upload_path.unlink(missing_ok=True)
+
+    return redirect(url_for("dataset.index"))
+
+@bp.post("/preprocess")
+def preprocess():
+    dataset = current_app.config.get("CURRENT_DATASET")
+
+    if not dataset:
+        flash(
+            "Please upload and validate a dataset before preprocessing.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        metadata = preprocess_dataset(dataset)
+
+        current_app.config["CURRENT_PREPROCESSING"] = metadata
+
+        flash(
+            "Image preprocessing completed successfully.",
+            "success",
+        )
+
+        return render_template(
+            "dataset.html",
+            dataset=dataset,
+            preprocessing=metadata,
+        )
+
+    except ValueError as exc:
+        current_app.logger.exception("Dataset preprocessing validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Dataset preprocessing failed")
+        flash(
+            "Image preprocessing failed. Check the dataset and available disk space.",
+            "error",
+        )
 
     return redirect(url_for("dataset.index"))

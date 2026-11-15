@@ -43,6 +43,23 @@
   </div>
 
   <div class="card">
+    <section>
+      <h2>Image Preprocessing</h2>
+      <p>
+          Images will be resized to
+          {{ dataset_preprocessing_size if dataset_preprocessing_size else "128 × 128" }},
+          converted to RGB, converted to numerical arrays,
+          and normalized to the range 0–1.
+      </p>
+      <form method="POST" action="{{ url_for('dataset.preprocess') }}">
+          <button type="submit">
+              Start Image Preprocessing
+          </button>
+      </form>
+    </section>
+  </div>
+
+  <div class="card">
     <h2>Categories & Samples</h2>
     {% for category, info in dataset.categories.items() %}
       <section>
@@ -57,6 +74,39 @@
         </div>
       </section>
     {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if preprocessing %}
+  <div class="card">
+    <section>
+      <h2>Preprocessing Results</h2>
+      <p>
+          <strong>Processed images:</strong>
+          {{ preprocessing.processed_images }}
+      </p>
+      <p>
+          <strong>Failed images:</strong>
+          {{ preprocessing.failed_images }}
+      </p>
+      <p>
+          <strong>Image size:</strong>
+          {{ preprocessing.image_size[0] }} ×
+          {{ preprocessing.image_size[1] }}
+      </p>
+      <p>
+          <strong>Color format:</strong>
+          {{ preprocessing.color_format }}
+      </p>
+      <p>
+          <strong>Data type:</strong>
+          {{ preprocessing.dtype }}
+      </p>
+      <p>
+          <strong>Normalization:</strong>
+          {{ preprocessing.normalization.method }}
+      </p>
+    </section>
   </div>
   {% endif %}
 </body>
