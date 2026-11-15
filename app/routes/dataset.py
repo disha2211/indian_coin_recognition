@@ -3,6 +3,12 @@ from app.services.afe_service import extract_afe_dataset
 from app.services.split_service import create_or_load_split
 from app.services.model_training_service import train_classical_model
 
+from app.services.evaluation_service import (
+    evaluate_all_models,
+    load_evaluation_results,
+)
+from flask import send_file
+
 from flask import (
     Blueprint,
     current_app,
@@ -13,6 +19,10 @@ from flask import (
     url_for,
 )
 from werkzeug.utils import secure_filename
+import json
+from pathlib import Path
+
+from app.config import PROCESSED_DIR
 
 from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
@@ -35,6 +45,8 @@ def index():
     afe = state.get("afe")
     split = state.get("split")
     models = state.get("models", {})
+    dcnn = current_app.config.get("CURRENT_DCNN")
+    evaluation = state.get("evaluation")
 
     # Restore all modules into Flask application state.
     current_app.config["CURRENT_DATASET"] = dataset
@@ -42,6 +54,39 @@ def index():
     current_app.config["CURRENT_AFE"] = afe
     current_app.config["CURRENT_SPLIT"] = split
     current_app.config["CURRENT_MODELS"] = models
+    current_app.config["CURRENT_EVALUATION"] = evaluation
+
+    # Load saved DCNN metadata if it is not already in memory.
+    if dataset and dcnn is None:
+        dcnn_metadata_path = (
+        Path(PROCESSED_DIR)
+        / dataset["dataset_id"]
+        / "dcnn"
+        / "dcnn_model_metadata.json"
+    )
+
+    if dcnn_metadata_path.exists():
+        try:
+            with open(
+                dcnn_metadata_path,
+                "r",
+                encoding="utf-8",
+            ) as file:
+                dcnn = json.load(file)
+
+            current_app.config["CURRENT_DCNN"] = dcnn
+
+        except (OSError, json.JSONDecodeError):
+            dcnn = None
+
+    if dataset:
+        saved_evaluation = load_evaluation_results(
+        dataset["dataset_id"]
+    )
+
+    if saved_evaluation:
+        evaluation = saved_evaluation
+        current_app.config["CURRENT_EVALUATION"] = evaluation
 
     return render_template(
         "dataset.html",
@@ -50,6 +95,8 @@ def index():
         afe=afe,
         split=split,
         models=models,
+        dcnn=dcnn,
+        evaluation=evaluation,
     )
 
 @bp.post("/upload")
@@ -345,6 +392,94 @@ def train_model(model_key):
         )
         flash(
             f"{allowed_models[model_key]} training failed. Check the application logs.",
+            "error",
+        )
+
+    return redirect(url_for("dataset.index"))
+
+@bp.route("/dcnn-plot/<dataset_id>/<plot_name>")
+def dcnn_plot(dataset_id, plot_name):
+
+    allowed_plots = {
+        "accuracy_plot.png",
+        "loss_plot.png",
+    }
+
+    if plot_name not in allowed_plots:
+        return "Invalid plot.", 404
+
+    plot_path = (
+        Path(PROCESSED_DIR)
+        / dataset_id
+        / "dcnn"
+        / plot_name
+    )
+
+    if not plot_path.exists():
+        return "DCNN plot not found.", 404
+
+    return send_file(plot_path)
+
+@bp.post("/evaluate")
+def run_evaluation():
+    dataset = current_app.config.get("CURRENT_DATASET")
+
+    if not dataset:
+        flash("Please upload a dataset first.", "error")
+        return redirect(url_for("dataset.index"))
+
+    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+    afe = current_app.config.get("CURRENT_AFE")
+    split = current_app.config.get("CURRENT_SPLIT")
+
+    if not preprocessing or not afe or not split:
+        flash(
+            "Complete preprocessing, AFE and train/test split first.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        dataset_id = dataset["dataset_id"]
+
+        result = evaluate_all_models(
+            dataset_id=dataset_id,
+            dataset_metadata=dataset,
+        )
+
+        # Keep only the saved comparison and directory in project state.
+        evaluation_state = {
+            "comparison": result["comparison"],
+            "evaluation_directory": result["evaluation_directory"],
+        }
+
+        current_app.config["CURRENT_EVALUATION"] = evaluation_state
+
+        state = load_project_state() or {}
+
+        state["dataset"] = dataset
+        state["preprocessing"] = preprocessing
+        state["afe"] = afe
+        state["split"] = split
+        state["evaluation"] = evaluation_state
+
+        save_project_state(state)
+
+        flash(
+            "All four models evaluated successfully.",
+            "success",
+        )
+
+        return redirect(url_for("dataset.index"))
+
+    except (FileNotFoundError, ValueError) as exc:
+        current_app.logger.exception("Model evaluation validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Model evaluation failed")
+        flash(
+            "Model evaluation failed. Check the application logs.",
             "error",
         )
 

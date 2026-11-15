@@ -298,5 +298,374 @@
     </div>
 </div>
 {% endif %}
+
+<!-- =========================
+     MODULE 6 — DCNN
+========================= -->
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Module 6 — Proposed DCNN</h3>
+    </div>
+
+    <div class="card-body">
+
+        {% if dcnn %}
+
+            <div class="alert alert-success">
+                <strong>DCNN Status:</strong>
+                {{ dcnn.status|capitalize }}
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6">
+                    <h5>Model Information</h5>
+
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>Model Name</th>
+                                <td>{{ dcnn.model_name }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Model File</th>
+                                <td>{{ dcnn.model_file }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Input Shape</th>
+                                <td>{{ dcnn.input_shape }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Number of Classes</th>
+                                <td>{{ dcnn.num_classes }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Optimizer</th>
+                                <td>{{ dcnn.optimizer }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Loss Function</th>
+                                <td>{{ dcnn.loss }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <div class="col-md-6">
+                    <h5>Training Information</h5>
+
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>Total Samples</th>
+                                <td>{{ dcnn.total_samples }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Training Samples</th>
+                                <td>{{ dcnn.training_samples }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Validation Samples</th>
+                                <td>{{ dcnn.validation_samples }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Testing Samples</th>
+                                <td>{{ dcnn.testing_samples }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Batch Size</th>
+                                <td>{{ dcnn.batch_size }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Maximum Epochs</th>
+                                <td>{{ dcnn.maximum_epochs }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Completed Epochs</th>
+                                <td>{{ dcnn.completed_epochs }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+
+            <div class="row mt-3">
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Best Validation Accuracy</h5>
+
+                            <h2>
+                                {{ "%.2f"|format(
+                                    dcnn.best_validation_accuracy * 100
+                                ) }}%
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Best Validation Loss</h5>
+
+                            <h2>
+                                {{ "%.4f"|format(
+                                    dcnn.best_validation_loss
+                                ) }}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="mt-4">
+                <h5>Class Weights</h5>
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for class_id, weight in dcnn.class_weights.items() %}
+                        <tr>
+                            <td>{{ class_id }}</td>
+                            <td>{{ "%.4f"|format(weight) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="mt-4">
+                <h5>Training Accuracy</h5>
+
+                <img
+                    src="{{ url_for(
+                        'dataset.dcnn_plot',
+                        dataset_id=dataset.dataset_id,
+                        plot_name='accuracy_plot.png'
+                    ) }}"
+                    class="img-fluid"
+                    alt="DCNN training and validation accuracy"
+                >
+            </div>
+
+
+            <div class="mt-4">
+                <h5>Training Loss</h5>
+
+                <img
+                    src="{{ url_for(
+                        'dataset.dcnn_plot',
+                        dataset_id=dataset.dataset_id,
+                        plot_name='loss_plot.png'
+                    ) }}"
+                    class="img-fluid"
+                    alt="DCNN training and validation loss"
+                >
+            </div>
+
+
+        {% else %}
+
+            <div class="alert alert-info">
+                DCNN training has not been completed for the current dataset.
+            </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% if split %}
+<div class="card">
+    <h2>Module 7 — Model Evaluation</h2>
+
+    <p>
+        Evaluate all four trained models on the same
+        held-out test dataset.
+    </p>
+
+    <form method="POST" action="{{ url_for('dataset.run_evaluation') }}">
+        <button type="submit">
+            Evaluate All Four Models
+        </button>
+    </form>
+</div>
+{% endif %}
+
+
+{% if evaluation %}
+<div class="card">
+    <h2>Model Comparison Results</h2>
+
+    <p>
+        <strong>Test samples:</strong>
+        {{ evaluation.comparison.test_samples }}
+    </p>
+
+    <p>
+        <strong>Best model:</strong>
+        {{ evaluation.comparison.best_model.model_name }}
+    </p>
+
+    <p>
+        <strong>Selection metric:</strong>
+        Macro F1-score
+    </p>
+
+    <h3>Performance Comparison</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Accuracy</th>
+                <th>Macro Precision</th>
+                <th>Macro Recall</th>
+                <th>Macro F1</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for model in evaluation.comparison.models %}
+            <tr>
+                <td>{{ model.model_name }}</td>
+                <td>{{ "%.4f"|format(model.accuracy) }}</td>
+                <td>{{ "%.4f"|format(model.precision_macro) }}</td>
+                <td>{{ "%.4f"|format(model.recall_macro) }}</td>
+                <td>{{ "%.4f"|format(model.f1_macro) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="card">
+    <h2>Classification Reports</h2>
+
+    {% for model_key, result in evaluation.individual_results.items() %}
+
+    <section>
+        <h3>{{ result.model_name }}</h3>
+
+        <p>
+            <strong>Accuracy:</strong>
+            {{ "%.4f"|format(result.accuracy) }}
+        </p>
+
+        <p>
+            <strong>Macro Precision:</strong>
+            {{ "%.4f"|format(result.precision_macro) }}
+        </p>
+
+        <p>
+            <strong>Macro Recall:</strong>
+            {{ "%.4f"|format(result.recall_macro) }}
+        </p>
+
+        <p>
+            <strong>Macro F1-score:</strong>
+            {{ "%.4f"|format(result.f1_macro) }}
+        </p>
+
+        <h4>Per-Class Metrics</h4>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-score</th>
+                    <th>Support</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for category in dataset.categories %}
+                <tr>
+                    <td>{{ category }}</td>
+                    <td>
+                        {{ "%.4f"|format(
+                            result.classification_report[category]["precision"]
+                        ) }}
+                    </td>
+                    <td>
+                        {{ "%.4f"|format(
+                            result.classification_report[category]["recall"]
+                        ) }}
+                    </td>
+                    <td>
+                        {{ "%.4f"|format(
+                            result.classification_report[category]["f1-score"]
+                        ) }}
+                    </td>
+                    <td>
+                        {{ result.classification_report[category]["support"]|int }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Confusion Matrix</h4>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Actual / Predicted</th>
+
+                    {% for category in dataset.categories %}
+                    <th>{{ category }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in result.confusion_matrix %}
+                <tr>
+                    <th>Class {{ loop.index }}</th>
+
+                    {% for value in row %}
+                    <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </section>
+
+    <hr>
+
+    {% endfor %}
+</div>
+{% endif %}
+
 </body>
 </html>
