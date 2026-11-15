@@ -209,5 +209,94 @@
 </section>
 {% endif %}
   {% endif %}
+  {% if split %}
+<div class="card">
+    <h2>Module 5 — Traditional ML Model Training</h2>
+
+    <p>
+        Train three independent machine learning classifiers using
+        the saved AFE features and the existing training split.
+    </p>
+
+    <div class="grid">
+
+        <!-- Multinomial Naive Bayes -->
+        <div class="card">
+            <h3>Multinomial Naive Bayes</h3>
+
+            {% if models and models.get("naive_bayes") %}
+                <p class="success">
+                    Status: {{ models["naive_bayes"].status }}
+                </p>
+                <p>
+                    Training samples:
+                    {{ models["naive_bayes"].training_samples }}
+                </p>
+            {% else %}
+                <p>Status: Not trained yet</p>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('dataset.train_model', model_key='naive_bayes') }}">
+                <button type="submit">Train / Load Model</button>
+                <button type="submit" name="force_retrain" value="1">
+                    Retrain
+                </button>
+            </form>
+        </div>
+
+        <!-- Decision Tree -->
+        <div class="card">
+            <h3>Decision Tree</h3>
+
+            {% if models and models.get("decision_tree") %}
+                <p class="success">
+                    Status: {{ models["decision_tree"].status }}
+                </p>
+                <p>
+                    Training samples:
+                    {{ models["decision_tree"].training_samples }}
+                </p>
+            {% else %}
+                <p>Status: Not trained yet</p>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('dataset.train_model', model_key='decision_tree') }}">
+                <button type="submit">Train / Load Model</button>
+                <button type="submit" name="force_retrain" value="1">
+                    Retrain
+                </button>
+            </form>
+        </div>
+
+        <!-- Random Forest -->
+        <div class="card">
+            <h3>Random Forest</h3>
+
+            {% if models and models.get("random_forest") %}
+                <p class="success">
+                    Status: {{ models["random_forest"].status }}
+                </p>
+                <p>
+                    Training samples:
+                    {{ models["random_forest"].training_samples }}
+                </p>
+            {% else %}
+                <p>Status: Not trained yet</p>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('dataset.train_model', model_key='random_forest') }}">
+                <button type="submit">Train / Load Model</button>
+                <button type="submit" name="force_retrain" value="1">
+                    Retrain
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endif %}
 </body>
 </html>

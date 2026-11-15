@@ -1,6 +1,7 @@
 from uuid import uuid4
 from app.services.afe_service import extract_afe_dataset
 from app.services.split_service import create_or_load_split
+from app.services.model_training_service import train_classical_model
 
 from flask import (
     Blueprint,
@@ -26,27 +27,21 @@ def allowed_dataset(filename: str) -> bool:
 
 @bp.get("/")
 def index():
-    dataset = current_app.config.get("CURRENT_DATASET")
-    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
-    afe = current_app.config.get("CURRENT_AFE")
-    split = current_app.config.get("CURRENT_SPLIT")
+    # The saved project state is the source of truth.
+    state = load_project_state() or {}
 
-    if dataset is None:
-        state = load_project_state()
+    dataset = state.get("dataset")
+    preprocessing = state.get("preprocessing")
+    afe = state.get("afe")
+    split = state.get("split")
+    models = state.get("models", {})
 
-        if state:
-            dataset = state.get("dataset")
-            preprocessing = state.get("preprocessing")
-            afe = state.get("afe")
-
-            if dataset:
-                current_app.config["CURRENT_DATASET"] = dataset
-
-            if preprocessing:
-                current_app.config["CURRENT_PREPROCESSING"] = preprocessing
-
-            if afe:
-                current_app.config["CURRENT_AFE"] = afe
+    # Restore all modules into Flask application state.
+    current_app.config["CURRENT_DATASET"] = dataset
+    current_app.config["CURRENT_PREPROCESSING"] = preprocessing
+    current_app.config["CURRENT_AFE"] = afe
+    current_app.config["CURRENT_SPLIT"] = split
+    current_app.config["CURRENT_MODELS"] = models
 
     return render_template(
         "dataset.html",
@@ -54,6 +49,7 @@ def index():
         preprocessing=preprocessing,
         afe=afe,
         split=split,
+        models=models,
     )
 
 @bp.post("/upload")
@@ -272,6 +268,83 @@ def run_split():
         current_app.logger.exception("Train/test split failed")
         flash(
             "Could not create the train/test split. Check the logs.",
+            "error",
+        )
+
+    return redirect(url_for("dataset.index"))
+
+
+@bp.post("/train/<model_key>")
+def train_model(model_key):
+    allowed_models = {
+        "naive_bayes": "Multinomial Naive Bayes",
+        "decision_tree": "Decision Tree",
+        "random_forest": "Random Forest",
+    }
+
+    if model_key not in allowed_models:
+        flash("Invalid model selected.", "error")
+        return redirect(url_for("dataset.index"))
+
+    dataset = current_app.config.get("CURRENT_DATASET")
+    afe = current_app.config.get("CURRENT_AFE")
+    split = current_app.config.get("CURRENT_SPLIT")
+
+    if not dataset:
+        flash("Please upload a dataset first.", "error")
+        return redirect(url_for("dataset.index"))
+
+    if not afe or not split:
+        flash(
+            "Complete AFE and train/test splitting before training models.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        force_retrain = request.form.get("force_retrain") == "1"
+
+        result = train_classical_model(
+            dataset_id=dataset["dataset_id"],
+            model_key=model_key,
+            force_retrain=force_retrain,
+        )
+        # Preserve the state of all previously completed modules.
+        state = load_project_state() or {}
+
+        models = state.get("models", {})
+        models[model_key] = result
+
+        state["dataset"] = dataset
+        state["afe"] = afe
+        state["split"] = split
+        state["models"] = models
+
+        save_project_state(state)
+
+        current_app.config["CURRENT_MODELS"] = models
+
+        if result["status"] == "reused":
+            flash(
+                f"{result['model_name']} loaded from saved artifacts.",
+                "success",
+            )
+        else:
+            flash(
+                f"{result['model_name']} trained and saved successfully.",
+                "success",
+            )
+
+    except (FileNotFoundError, ValueError) as exc:
+        current_app.logger.exception("Model training validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception(
+            "Model training failed: %s", model_key
+        )
+        flash(
+            f"{allowed_models[model_key]} training failed. Check the application logs.",
             "error",
         )
 
