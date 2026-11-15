@@ -24,6 +24,9 @@ PROCESSED_IMAGES_FILENAME = "images.npy"
 PROCESSED_LABELS_FILENAME = "labels.npy"
 CLASS_MAPPING_FILENAME = "class_mapping.json"
 
+STATE_FILENAME = "project_state.json"
+STATE_FILE = ARTIFACTS_DIR / STATE_FILENAME
+
 # Override these through environment variables when deploying on a machine
 # with more/less disk capacity. These are byte limits, not RAM allocations.
 MAX_CONTENT_LENGTH = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024**3)))  # 10 GiB

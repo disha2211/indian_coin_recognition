@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
 from app.services.preprocessing_service import preprocess_dataset
+from app.services.state_service import load_project_state, save_project_state
 
 bp = Blueprint("dataset", __name__)
 
@@ -23,11 +24,27 @@ def allowed_dataset(filename: str) -> bool:
 
 @bp.get("/")
 def index():
+    dataset = current_app.config.get("CURRENT_DATASET")
+    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+
+    if dataset is None:
+        state = load_project_state()
+
+        if state:
+            dataset = state.get("dataset")
+            preprocessing = state.get("preprocessing")
+
+            if dataset:
+                current_app.config["CURRENT_DATASET"] = dataset
+
+            if preprocessing:
+                current_app.config["CURRENT_PREPROCESSING"] = preprocessing
+
     return render_template(
-            "dataset.html",
-            dataset=current_app.config.get("CURRENT_DATASET"),
-            preprocessing=current_app.config.get("CURRENT_PREPROCESSING"),
-        )
+        "dataset.html",
+        dataset=dataset,
+        preprocessing=preprocessing,
+    )
 
 @bp.post("/upload")
 def upload():
@@ -49,13 +66,24 @@ def upload():
         # save() copies it to disk rather than reading the entire archive into RAM.
         uploaded.save(upload_path)
         metadata = inspect_dataset(upload_path)
+
         current_app.config["CURRENT_DATASET"] = metadata
+        current_app.config["CURRENT_PREPROCESSING"] = None
+
+        save_project_state(
+            {
+                "dataset": metadata,
+                "preprocessing": None,
+            }
+        )
+
         flash("Dataset uploaded, extracted and validated successfully.", "success")
+
         return render_template(
-                        "dataset.html",
-                        dataset=metadata,
-                        preprocessing=None,
-                    )
+            "dataset.html",
+            dataset=metadata,
+            preprocessing=None,
+        )
     except ValueError as exc:
         flash(str(exc), "error")
     except OSError:
@@ -88,10 +116,14 @@ def preprocess():
 
         current_app.config["CURRENT_PREPROCESSING"] = metadata
 
-        flash(
-            "Image preprocessing completed successfully.",
-            "success",
+        save_project_state(
+            {
+                "dataset": dataset,
+                "preprocessing": metadata,
+            }
         )
+
+        flash("Image preprocessing completed successfully.", "success")
 
         return render_template(
             "dataset.html",
