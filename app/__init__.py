@@ -17,6 +17,7 @@ def create_app() -> Flask:
     if state:
         app.config["CURRENT_DATASET"] = state.get("dataset")
         app.config["CURRENT_PREPROCESSING"] = state.get("preprocessing")
+        app.config["CURRENT_AFE"] = state.get("afe")
 
     from app.routes.dataset import bp as dataset_bp
     app.register_blueprint(dataset_bp, url_prefix="/dataset")

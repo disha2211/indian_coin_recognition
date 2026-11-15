@@ -27,6 +27,28 @@ CLASS_MAPPING_FILENAME = "class_mapping.json"
 STATE_FILENAME = "project_state.json"
 STATE_FILE = ARTIFACTS_DIR / STATE_FILENAME
 
+# Adaptive Feature Enhancement (AFE)
+AFE_FEATURE_DTYPE = "float32"
+AFE_DIRNAME = "afe"
+
+AFE_FEATURES_FILENAME = "features.npy"
+AFE_LABELS_FILENAME = "labels.npy"
+AFE_METADATA_FILENAME = "afe_metadata.json"
+AFE_CONFIG_FILENAME = "afe_config.json"
+
+# CLAHE parameters
+AFE_CLAHE_CLIP_LIMIT = 2.0
+AFE_CLAHE_TILE_GRID_SIZE = (8, 8)
+
+# Sobel parameters
+AFE_SOBEL_KERNEL_SIZE = 3
+
+# LBP parameters
+AFE_LBP_POINTS = 8
+AFE_LBP_RADIUS = 1
+
+
+
 # Override these through environment variables when deploying on a machine
 # with more/less disk capacity. These are byte limits, not RAM allocations.
 MAX_CONTENT_LENGTH = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024**3)))  # 10 GiB

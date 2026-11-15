@@ -1,4 +1,5 @@
 from uuid import uuid4
+from app.services.afe_service import extract_afe_dataset
 
 from flask import (
     Blueprint,
@@ -26,6 +27,7 @@ def allowed_dataset(filename: str) -> bool:
 def index():
     dataset = current_app.config.get("CURRENT_DATASET")
     preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+    afe = current_app.config.get("CURRENT_AFE")
 
     if dataset is None:
         state = load_project_state()
@@ -33,6 +35,7 @@ def index():
         if state:
             dataset = state.get("dataset")
             preprocessing = state.get("preprocessing")
+            afe = state.get("afe")
 
             if dataset:
                 current_app.config["CURRENT_DATASET"] = dataset
@@ -40,10 +43,14 @@ def index():
             if preprocessing:
                 current_app.config["CURRENT_PREPROCESSING"] = preprocessing
 
+            if afe:
+                current_app.config["CURRENT_AFE"] = afe
+
     return render_template(
         "dataset.html",
         dataset=dataset,
         preprocessing=preprocessing,
+        afe=afe,
     )
 
 @bp.post("/upload")
@@ -139,6 +146,73 @@ def preprocess():
         current_app.logger.exception("Dataset preprocessing failed")
         flash(
             "Image preprocessing failed. Check the dataset and available disk space.",
+            "error",
+        )
+
+    return redirect(url_for("dataset.index"))
+
+
+@bp.post("/afe")
+def run_afe():
+    dataset = current_app.config.get("CURRENT_DATASET")
+    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+
+    if not dataset:
+        flash(
+            "Please upload and validate a dataset before running AFE.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    if not preprocessing:
+        flash(
+            "Please complete image preprocessing before running AFE.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        metadata = extract_afe_dataset(dataset)
+
+        current_app.config["CURRENT_AFE"] = metadata
+
+        # Preserve the existing persistent state.
+        state = load_project_state() or {}
+
+        state["dataset"] = dataset
+        state["preprocessing"] = preprocessing
+        state["afe"] = metadata
+
+        save_project_state(state)
+
+        flash(
+            "Adaptive Feature Enhancement completed successfully.",
+            "success",
+        )
+
+        return render_template(
+            "dataset.html",
+            dataset=dataset,
+            preprocessing=preprocessing,
+            afe=metadata,
+        )
+
+    except FileNotFoundError as exc:
+        flash(str(exc), "error")
+
+    except ValueError as exc:
+        current_app.logger.exception(
+            "AFE validation failed"
+        )
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception(
+            "AFE processing failed"
+        )
+        flash(
+            "Adaptive Feature Enhancement failed. "
+            "Check the dataset and available disk space.",
             "error",
         )
 

@@ -108,6 +108,49 @@
       </p>
     </section>
   </div>
+
+  <div class="card">
+    <section>
+      <h2>Adaptive Feature Enhancement</h2>
+      <p>
+          Apply the defined AFE pipeline to the preprocessed
+          coin images and generate numerical feature vectors.
+      </p>
+      <form method="POST" action="{{ url_for('dataset.run_afe') }}">
+          <button type="submit">
+              Run Adaptive Feature Enhancement
+          </button>
+      </form>
+    </section>
+  </div>
+  {% endif %}
+
+  {% if afe %}
+  <div class="card">
+    <section>
+      <h2>AFE Results</h2>
+      <p>
+          <strong>Method:</strong>
+          {{ afe.method }}
+      </p>
+      <p>
+          <strong>Processed images:</strong>
+          {{ afe.processed_images }}
+      </p>
+      <p>
+          <strong>Failed images:</strong>
+          {{ afe.failed_images }}
+      </p>
+      <p>
+          <strong>Features per image:</strong>
+          {{ afe.feature_count }}
+      </p>
+      <p>
+          <strong>Data type:</strong>
+          {{ afe.feature_dtype }}
+      </p>
+    </section>
+  </div>
   {% endif %}
 </body>
 </html>
