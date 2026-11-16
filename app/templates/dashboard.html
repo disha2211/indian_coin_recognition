@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indian Coin Recognition | Dashboard</title>
+  <style>
+    :root{--navy:#14243a;--navy2:#1d3553;--teal:#168b83;--gold:#d4a94e;--ink:#243247;--muted:#718096;--line:#e5eaf0;--paper:#f4f7fa;--white:#fff}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Inter,Segoe UI,Arial,sans-serif}
+    .shell{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:var(--navy);color:#eaf0f7;padding:28px 20px}
+    .brand{font-size:17px;font-weight:750;line-height:1.35;margin-bottom:8px}.sub{color:#aebed0;font-size:12px;margin-bottom:32px}
+    .nav a{display:block;padding:11px 13px;margin:5px 0;border-radius:9px;color:#d8e2ed;text-decoration:none}.nav a:hover,.nav a.active{background:var(--navy2);color:#fff}
+    main{padding:36px clamp(20px,4vw,56px);max-width:1400px;width:100%}.eyebrow{color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+    h1{font-size:30px;line-height:1.2;margin:8px 0}.lead{color:var(--muted);margin:0 0 28px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.btn{display:inline-block;background:var(--teal);color:#fff;text-decoration:none;padding:11px 17px;border-radius:9px;font-weight:650}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0}.stat,.panel,.step{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 5px 18px rgba(20,36,58,.035)}
+    .stat small{color:var(--muted);display:block}.stat strong{font-size:25px;display:block;margin-top:5px}.panel h2{font-size:18px;margin:0 0 5px}.muted{color:var(--muted)}
+    .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:16px}.step{padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .step a{color:var(--ink);text-decoration:none;font-weight:650}.status{font-size:11px;padding:4px 9px;border-radius:99px;background:#edf1f5;color:#637286;white-space:nowrap}
+    .status.done{background:#e1f4ef;color:#147365}.quick{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.quick a{color:var(--teal);font-weight:650;text-decoration:none}
+    @media(max-width:900px){.shell{grid-template-columns:1fr}.side{padding:16px 20px}.sub{margin-bottom:10px}.nav{display:flex;gap:5px;overflow:auto}.nav a{white-space:nowrap}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){main{padding:24px 16px}.stats,.steps{grid-template-columns:1fr}.top h1{font-size:25px}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Indian Coin<br>Recognition System</div>
+    <div class="sub">Computer Vision · Machine Learning</div>
+    <nav class="nav">
+      <a class="active" href="{{ url_for('dashboard') }}">Overview</a>
+      <a href="{{ url_for('dataset.index') }}">Dataset workspace</a>
+      <a href="{{ url_for('dataset.index') }}#prediction">Coin prediction</a>
+    </nav>
+  </aside>
+  <main>
+    <div class="top">
+      <div><div class="eyebrow">Project workspace</div><h1>System Dashboard</h1><p class="lead">Track your dataset pipeline, model training and coin recognition results.</p></div>
+      <a class="btn" href="{{ url_for('dataset.index') }}">Open workspace →</a>
+    </div>
+
+    <section class="stats">
+      <div class="stat"><small>Dataset images</small><strong>{{ dataset.total_images if dataset else "—" }}</strong><small>{{ dataset.categories|length if dataset else 0 }} categories loaded</small></div>
+      <div class="stat"><small>Pipeline stages</small><strong>{{ completed_stages }}/7</strong><small>Completed stages</small></div>
+      <div class="stat"><small>Saved models</small><strong>{{ saved_model_count }}</strong><small>Available for inference</small></div>
+      <div class="stat"><small>Evaluation</small><strong>{{ "Ready" if evaluation else "Pending" }}</strong><small>Four-model comparison</small></div>
+    </section>
+
+    <section class="panel">
+      <h2>Workflow progress</h2>
+      <p class="muted">Open any stage in the workspace to continue the pipeline.</p>
+      <div class="steps">
+        {% for item in stages %}
+        <div class="step"><a href="{{ url_for('dataset.index') }}#{{ item.anchor }}">{{ item.label }}</a><span class="status {{ 'done' if item.done else '' }}">{{ "Complete" if item.done else "Pending" }}</span></div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:18px">
+      <h2>Quick actions</h2>
+      <p class="muted">Continue working with your current dataset and saved artifacts.</p>
+      <div class="quick">
+        <a href="{{ url_for('dataset.index') }}#dataset-upload">Upload / inspect dataset</a>
+        <a href="{{ url_for('dataset.index') }}#model-training">Train models</a>
+        <a href="{{ url_for('dataset.index') }}#model-evaluation">View evaluation</a>
+        <a href="{{ url_for('dataset.index') }}#prediction">Predict a coin</a>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
