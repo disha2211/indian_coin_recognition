@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 
 from app.config import MAX_CONTENT_LENGTH
 from app.services.state_service import load_project_state
@@ -25,33 +25,36 @@ def create_app() -> Flask:
 
     @app.get("/")
     def dashboard():
-        dataset = app.config.get("CURRENT_DATASET")
-        preprocessing = app.config.get("CURRENT_PREPROCESSING")
+        state = load_project_state() or {}
 
-        dataset_status = (
-            "Dataset loaded"
-            if dataset
-            else "No dataset uploaded"
+        dataset = state.get("dataset")
+        preprocessing = state.get("preprocessing")
+        afe = state.get("afe")
+        split = state.get("split")
+        models = state.get("models") or {}
+        dcnn = state.get("dcnn")
+        evaluation = state.get("evaluation")
+        prediction = state.get("prediction")
+
+        training_done = bool(models or dcnn)
+        stages = [
+            {"label": "1. Dataset upload", "anchor": "dataset-upload", "done": bool(dataset)},
+            {"label": "2. Image preprocessing", "anchor": "preprocessing", "done": bool(preprocessing)},
+            {"label": "3. Adaptive feature enhancement", "anchor": "afe", "done": bool(afe)},
+            {"label": "4. Train/test split", "anchor": "split", "done": bool(split)},
+            {"label": "5. Model training", "anchor": "model-training", "done": training_done},
+            {"label": "6. Model evaluation", "anchor": "model-evaluation", "done": bool(evaluation)},
+            {"label": "7. Coin prediction", "anchor": "prediction", "done": bool(prediction)},
+        ]
+
+        return render_template(
+            "dashboard.html",
+            dataset=dataset,
+            evaluation=evaluation,
+            saved_model_count=len(models) + (1 if dcnn else 0),
+            stages=stages,
+            completed_stages=sum(1 for item in stages if item["done"]),
         )
-
-        preprocessing_status = (
-            "Preprocessing completed"
-            if preprocessing
-            else "Not completed"
-        )
-
-        return f"""
-        <h1>Indian Coin Recognition System</h1>
-
-        <h2>Project Status</h2>
-
-        <p><strong>Dataset:</strong> {dataset_status}</p>
-        <p><strong>Preprocessing:</strong> {preprocessing_status}</p>
-
-        <p>
-            <a href="/dataset/">Dataset Upload & Preview</a>
-        </p>
-        """
 
     @app.errorhandler(413)
     def too_large(_error):
