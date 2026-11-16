@@ -398,30 +398,16 @@
   <div class="card">
     <section>
       <h2>AFE Results</h2>
-      <p>
-          <strong>Method:</strong>
-          {{ afe.method }}
-      </p>
-      <p>
-          <strong>Processed images:</strong>
-          {{ afe.processed_images }}
-      </p>
-      <p>
-          <strong>Failed images:</strong>
-          {{ afe.failed_images }}
-      </p>
-      <p>
-          <strong>Features per image:</strong>
-          {{ afe.feature_count }}
-      </p>
-      <p>
-          <strong>Data type:</strong>
-          {{ afe.feature_dtype }}
-      </p>
+      <div class="stat-grid">
+        <div class="stat-card"><small>Method</small><strong>{{ afe.method }}</strong></div>
+        <div class="stat-card"><small>Processed images</small><strong>{{ afe.processed_images }}</strong></div>
+        <div class="stat-card"><small>Failed images</small><strong>{{ afe.failed_images }}</strong></div>
+        <div class="stat-card"><small>Features per image</small><strong>{{ afe.feature_count }}</strong></div>
+        <div class="stat-card"><small>Data type</small><strong>{{ afe.feature_dtype }}</strong></div>
+      </div>
     </section>
   </div>
 
-  {% if afe %}
 <section id="split" class="card">
     <h2>Train/Test Split</h2>
 
@@ -434,10 +420,9 @@
         <button type="submit">Create Train/Test Split</button>
     </form>
 </section>
-{% endif %}
 
 {% if split %}
-<section>
+<section class="card">
     <h2>Train/Test Split Results</h2>
 
     <p><strong>Method:</strong> {{ split.method }}</p>
@@ -451,6 +436,7 @@
 
     <h3>Class Distribution</h3>
 
+    <div class="table-wrap">
     <table>
         <thead>
             <tr>
@@ -490,7 +476,7 @@
     <div class="grid">
 
         <!-- Multinomial Naive Bayes -->
-        <div class="card">
+        <div class="model-card">
             <h3>Multinomial Naive Bayes</h3>
 
             {% if models and models.get("naive_bayes") %}
@@ -515,7 +501,7 @@
         </div>
 
         <!-- Decision Tree -->
-        <div class="card">
+        <div class="model-card">
             <h3>Decision Tree</h3>
 
             {% if models and models.get("decision_tree") %}
@@ -540,7 +526,7 @@
         </div>
 
         <!-- Random Forest -->
-        <div class="card">
+        <div class="model-card">
             <h3>Random Forest</h3>
 
             {% if models and models.get("random_forest") %}
@@ -573,9 +559,7 @@
 ========================= -->
 
 <div class="card">
-    <div class="section-heading">
-        <h3>Module 6 — Proposed DCNN</h3>
-    </div>
+    <h2>Module 6 — Proposed DCNN</h2>
 
     <div class="section-body">
 
@@ -649,7 +633,7 @@
                 <div class="model-card">
                     <h5>Training Information</h5>
 
-                    <table class="table table-bordered">
+                    <table>
                         <tbody>
                             <tr>
                                 <th>Total Samples</th>
@@ -692,35 +676,15 @@
             </div>
 
 
-            <div class="two-column">
-
-                <div class="col-md-6">
-                    <div class="stat-card">
-                            <h5>Best Validation Accuracy</h5>
-
-                            <h2>
-                                {{ "%.2f"|format(
-                                    dcnn.best_validation_accuracy * 100
-                                ) }}%
-                            </h2>
-                    </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <small>Best validation accuracy</small>
+                    <strong>{{ "%.2f"|format(dcnn.best_validation_accuracy * 100) }}%</strong>
                 </div>
-
-
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5>Best Validation Loss</h5>
-
-                            <h2>
-                                {{ "%.4f"|format(
-                                    dcnn.best_validation_loss
-                                ) }}
-                            </h2>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <small>Best validation loss</small>
+                    <strong>{{ "%.4f"|format(dcnn.best_validation_loss) }}</strong>
                 </div>
-
             </div>
 
 
@@ -747,7 +711,7 @@
             </div>
 
 
-            <div class="mt-4">
+            <div class="form-field">
                 <h5>Training Accuracy</h5>
 
                 <img
@@ -810,14 +774,11 @@
 <div class="card">
     <h2>Model Comparison Results</h2>
 
-    <p>
-        <strong>Test samples:</strong>
-        {{ evaluation.comparison.test_samples }}
-    </p>
-
-    <p><strong>Best model:</strong> {{ evaluation.comparison.best_model.model_name }} <span class="badge">Highest macro F1</span></p>
-
-    <p><strong>Selected by:</strong> Macro F1-score</p>
+    <div class="stat-grid">
+        <div class="stat-card"><small>Test samples</small><strong>{{ evaluation.comparison.test_samples }}</strong></div>
+        <div class="stat-card"><small>Best model</small><strong>{{ evaluation.comparison.best_model.model_name }}</strong></div>
+        <div class="stat-card"><small>Selection metric</small><strong>Macro F1-score</strong></div>
+    </div>
 
     <h3>Metric Comparison</h3>
 
@@ -847,7 +808,7 @@
 
     <h3>Performance Chart</h3>
     <p class="section-intro">Four evaluation metrics compared across all trained models.</p>
-    <img class="chart-image"
+    <img
         src="{{ url_for(
             'dataset.evaluation_plot',
             dataset_id=dataset.dataset_id,
@@ -1064,9 +1025,7 @@
         enctype="multipart/form-data"
     >
         <div class="form-field">
-            <label for="coin_image">
-                <strong>Select Coin Image:</strong>
-            </label>
+            <label for="coin_image">Coin image (JPG, JPEG or PNG)</label>
 
             
 
@@ -1079,13 +1038,8 @@
             >
         </div>
 
-        <div style="margin-bottom: 15px;">
-            <label for="model_key">
-                <strong>Select Prediction Model:</strong>
-            </label>
-
-            <br><br>
-
+        <div class="form-field">
+            <label for="model_key">Prediction model</label>
             <select id="model_key" name="model_key" required>
                 <option value="random_forest" selected>
                     Random Forest (Recommended)
@@ -1128,30 +1082,19 @@
                     alt="Uploaded coin image used for prediction"
                 >
             {% endif %}
-            <p class="mt-2">
+            <p>
                 <strong>Uploaded file:</strong>
                 {{ prediction.image_filename }}
             </p>
         </div>
 
         <div class="model-card">
-            <p>
-                <strong>Model Used:</strong>
-        {{ prediction.model_name }}
-    </p>
+            <p><strong>Model used</strong><br>{{ prediction.model_name }}</p>
+            <p><strong>Predicted denomination</strong></p>
+            <h2 class="success">{{ prediction.predicted_category }}</h2>
 
-    <p>
-        <strong>Predicted Denomination:</strong>
-
-        <span class="success">
-            <strong>{{ prediction.predicted_category }}</strong>
-        </span>
-    </p>
-
-            <p>
-                <strong>Confidence:</strong>
-                {{ "%.2f"|format(prediction.confidence_percentage) }}%
-            </p>
+            <p><strong>Confidence</strong></p>
+            <h2>{{ "%.2f"|format(prediction.confidence_percentage) }}%</h2>
         </div>
     </div>
 
