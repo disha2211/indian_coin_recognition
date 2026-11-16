@@ -150,16 +150,60 @@
     label { display: inline-block; margin-bottom: 5px; font-weight: 650; }
     .form-field { margin: 0 0 16px; }
 
-    .table-wrap { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--white);
+    }
+    table {
+      width: 100%;
+      min-width: 560px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13.5px;
+    }
     th, td {
-      padding: 10px 12px;
+      padding: 12px 15px;
       border-bottom: 1px solid var(--line);
       text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
     }
-    th { background: #f7f9fb; color: var(--navy); font-weight: 700; }
-    tr:last-child td { border-bottom: 0; }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #edf2f6;
+      color: var(--navy);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    tbody tr { transition: background .12s ease; }
+    tbody tr:nth-child(even) { background: #fafbfd; }
+    tbody tr:hover { background: #eef7f6; }
+    tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+    td.numeric, th.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+    .comparison-table { min-width: 680px; }
+    .comparison-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    .comparison-table .best-model-row { background: #e8f5f1; }
+    .comparison-table .best-model-row td:first-child { color: #116c62; font-weight: 750; }
+    .matrix-table { min-width: 480px; }
+    .matrix-table th, .matrix-table td { text-align: center; min-width: 62px; font-variant-numeric: tabular-nums; }
+    .matrix-table thead th:first-child, .matrix-table tbody th { position: sticky; left: 0; z-index: 2; background: #edf2f6; }
+    .matrix-table tbody th { text-align: left; white-space: nowrap; }
+    .report-table td:not(:first-child), .report-table th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    .model-info-table { min-width: 0; }
+    .model-info-table th { width: 42%; text-transform: none; letter-spacing: 0; font-size: 12px; }
+    .model-info-table td { overflow-wrap: anywhere; }
+    .status-cell { text-align: center; }
+    @media(max-width: 620px) {
+      th, td { padding: 10px 11px; }
+      table { font-size: 12.5px; }
+    }
     code { padding: 2px 5px; border-radius: 4px; background: #f0f3f6; overflow-wrap: anywhere; }
 
     .success { color: #147365; }
@@ -422,9 +466,10 @@
     <p><strong>Stratified:</strong> {{ "Yes" if split.stratified else "No" }}</p>
 
     <h3>Class Distribution</h3>
+    <p class="section-intro">Image counts across the training and testing sets.</p>
 
     <div class="table-wrap">
-    <table>
+    <table class="distribution-table">
         <thead>
             <tr>
                 <th>Category</th>
@@ -575,7 +620,7 @@
                 <div class="model-card">
                     <h5>Model Information</h5>
 
-                    <table >
+                    <table class="model-info-table">
                         <tbody>
                             <tr>
                                 <th>Model Name</th>
@@ -613,7 +658,7 @@
                 <div class="model-card">
                     <h5>Training Information</h5>
 
-                    <table>
+                    <table class="model-info-table">
                         <tbody>
                             <tr>
                                 <th>Total Samples</th>
@@ -669,7 +714,7 @@
             <div class="form-field">
                 <h5>Class Weights</h5>
 
-                <table >
+                <table class="weights-table">
                     <thead>
                         <tr>
                             <th>Class</th>
@@ -752,8 +797,9 @@
     </div>
 
     <h3>Metric Comparison</h3>
+    <p class="section-intro">The best model is highlighted using macro F1-score.</p>
 
-    <table>
+    <table class="comparison-table">
         <thead>
             <tr>
                 <th>Model</th>
@@ -766,8 +812,13 @@
 
         <tbody>
             {% for model in evaluation.comparison.models %}
-            <tr>
-                <td>{{ model.model_name }}</td>
+            <tr class="{{ 'best-model-row' if model.model_name == evaluation.comparison.best_model.model_name else '' }}">
+                <td>
+                    {{ model.model_name }}
+                    {% if model.model_name == evaluation.comparison.best_model.model_name %}
+                        <span class="badge bg-success">Best</span>
+                    {% endif %}
+                </td>
                 <td>{{ "%.4f"|format(model.accuracy) }}</td>
                 <td>{{ "%.4f"|format(model.precision_macro) }}</td>
                 <td>{{ "%.4f"|format(model.recall_macro) }}</td>
@@ -799,7 +850,7 @@
 
         <h4>Per-Class Performance</h4>
 
-        <table>
+        <table class="report-table">
             <thead>
                 <tr>
                     <th>Category</th>
@@ -839,10 +890,10 @@
 
         <h4>Confusion Matrix</h4>
 
-        <table>
+        <table class="matrix-table">
             <thead>
                 <tr>
-                    <th>Actual / Predicted</th>
+                    <th>Actual ↓ / Predicted →</th>
 
                     {% for category in dataset.categories %}
                     <th>{{ category }}</th>
@@ -853,7 +904,7 @@
             <tbody>
                 {% for row in result.confusion_matrix %}
                 <tr>
-                    <th>Class {{ loop.index }}</th>
+                    <th>{{ dataset.categories[loop.index0] }}</th>
 
                     {% for value in row %}
                     <td>{{ value }}</td>
@@ -887,8 +938,7 @@
 
             <div class="table-wrap">
 
-                <table >
-
+                <table class="saved-model-table">
                     <thead>
                         <tr>
                             <th>Model</th>
@@ -915,19 +965,19 @@
                                 {{ model.filename }}
                             </td>
 
-                            <td>
+                            <td class="status-cell">
                                 {% if model.exists %}
-                                    ✓
+                                    <span class="badge bg-success">Yes</span>
                                 {% else %}
-                                    ✗
+                                    <span class="badge bg-danger">No</span>
                                 {% endif %}
                             </td>
 
-                            <td>
+                            <td class="status-cell">
                                 {% if model.loadable %}
-                                    ✓
+                                    <span class="badge bg-success">Yes</span>
                                 {% else %}
-                                    ✗
+                                    <span class="badge bg-danger">No</span>
                                 {% endif %}
                             </td>
 
