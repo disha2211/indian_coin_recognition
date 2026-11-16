@@ -151,7 +151,7 @@
     .form-field { margin: 0 0 16px; }
 
     .table-wrap { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
     th, td {
       padding: 10px 12px;
       border-bottom: 1px solid var(--line);
@@ -296,15 +296,8 @@
     <h2>Categories & Samples</h2>
     {% for category, info in dataset.categories.items() %}
       <section>
-        <h3>{{ category }} — {{ info.count }} images</h3>
-        <div class="grid">
-          {% for sample in info.samples %}
-            <div>
-              <p><code>{{ sample }}</code></p>
-              <p>Sample selected from uploaded dataset.</p>
-            </div>
-          {% endfor %}
-        </div>
+        <h3>{{ category }}</h3>
+        <p class="muted">{{ info.count }} images in this category</p>
       </section>
     {% endfor %}
   </div>
@@ -381,10 +374,7 @@
   <div class="card" id="afe">
     <section>
       <h2>Adaptive Feature Enhancement</h2>
-      <p>
-          Apply the defined AFE pipeline to the preprocessed
-          coin images and generate numerical feature vectors.
-      </p>
+      <p class="section-intro">Enhance coin images and extract numerical features for the classical classifiers.</p>
       <form method="POST" action="{{ url_for('dataset.run_afe') }}">
           <button type="submit">
               Run Adaptive Feature Enhancement
@@ -411,10 +401,7 @@
 <section id="split" class="card">
     <h2>Train/Test Split</h2>
 
-    <p>
-        Divide the AFE feature dataset into training and testing
-        sets using stratified sampling.
-    </p>
+    <p class="section-intro">Create a stratified 80/20 split using the saved random state.</p>
 
     <form method="POST" action="{{ url_for('dataset.run_split') }}">
         <button type="submit">Create Train/Test Split</button>
@@ -457,6 +444,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 
     {% if split.reused_existing %}
     <p>Previously saved split reused. No new split was generated.</p>
@@ -466,12 +454,9 @@
   {% endif %}
   {% if split %}
 <div class="card" id="model-training">
-    <h2>Module 5 — Traditional ML Model Training</h2>
+    <h2>Traditional ML Model Training</h2>
 
-    <p>
-        Train three independent machine learning classifiers using
-        the saved AFE features and the existing training split.
-    </p>
+    <p class="section-intro">Train three classifiers using the saved AFE feature vectors.</p>
 
     <div class="grid">
 
@@ -554,12 +539,8 @@
 </div>
 {% endif %}
 
-<!-- =========================
-     MODULE 6 — DCNN
-========================= -->
-
 <div class="card">
-    <h2>Module 6 — Proposed DCNN</h2>
+    <h2>Proposed DCNN</h2>
 
     <div class="section-body">
 
@@ -594,7 +575,7 @@
                 <div class="model-card">
                     <h5>Model Information</h5>
 
-                    <table class="data-table">
+                    <table >
                         <tbody>
                             <tr>
                                 <th>Model Name</th>
@@ -628,7 +609,6 @@
                         </tbody>
                     </table>
                 </div>
-
 
                 <div class="model-card">
                     <h5>Training Information</h5>
@@ -675,7 +655,6 @@
 
             </div>
 
-
             <div class="stat-grid">
                 <div class="stat-card">
                     <small>Best validation accuracy</small>
@@ -687,11 +666,10 @@
                 </div>
             </div>
 
-
             <div class="form-field">
                 <h5>Class Weights</h5>
 
-                <table class="table table-bordered">
+                <table >
                     <thead>
                         <tr>
                             <th>Class</th>
@@ -710,7 +688,6 @@
                 </table>
             </div>
 
-
             <div class="form-field">
                 <h5>Training Accuracy</h5>
 
@@ -725,8 +702,7 @@
                 >
             </div>
 
-
-            <div class="mt-4">
+            <div class="form-field">
                 <h5>Training Loss</h5>
 
                 <img
@@ -739,7 +715,6 @@
                     alt="DCNN training and validation loss"
                 >
             </div>
-
 
         {% else %}
 
@@ -754,12 +729,9 @@
 
 {% if split %}
 <div class="card" id="model-evaluation">
-    <h2>Module 7 — Model Evaluation</h2>
+    <h2>Model Evaluation</h2>
 
-    <p>
-        Evaluate all four trained models on the same
-        held-out test dataset.
-    </p>
+    <p class="section-intro">Evaluate all four models on the same held-out test set.</p>
 
     <form method="POST" action="{{ url_for('dataset.run_evaluation') }}">
         <button type="submit">
@@ -768,7 +740,6 @@
     </form>
 </div>
 {% endif %}
-
 
 {% if evaluation %}
 <div class="card">
@@ -900,16 +871,12 @@
 </div>
 {% endif %}
 
-<!-- =========================
-     MODULE 8 — SAVED MODELS
-========================= -->
-
-<div class="card mt-4" id="saved-models">
-    <div class="card-header">
-        <h3>Module 8 — Saved Models</h3>
+<div class="card" id="saved-models">
+    <div >
+        <h3>Saved Models</h3>
     </div>
 
-    <div class="card-body">
+    <div >
 
         {% if saved_models %}
 
@@ -920,7 +887,7 @@
 
             <div class="table-wrap">
 
-                <table class="table table-bordered">
+                <table >
 
                     <thead>
                         <tr>
@@ -1007,17 +974,10 @@
     </div>
 </div>
 
-<!-- =========================
-     MODULE 9 — COIN PREDICTION
-========================= -->
-
 <div class="card" id="prediction">
-    <h2>Module 9 — Indian Coin Prediction</h2>
+    <h2>Coin Prediction</h2>
 
-    <p>
-        Upload an individual coin image and select a trained
-        machine learning model to identify its denomination.
-    </p>
+    <p class="section-intro">Upload a coin image and choose a trained model to identify its denomination.</p>
 
     <form
         method="POST"
@@ -1026,8 +986,6 @@
     >
         <div class="form-field">
             <label for="coin_image">Coin image (JPG, JPEG or PNG)</label>
-
-            
 
             <input
                 type="file"
