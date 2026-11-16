@@ -930,13 +930,29 @@
 
     <h3>Prediction Results</h3>
 
-    <p>
-        <strong>Image:</strong>
-        {{ prediction.image_filename }}
-    </p>
+    <div class="row align-items-start">
+        <div class="col-md-5 mb-3">
+            {% if prediction.image_preview_filename %}
+                <img
+                    src="{{ url_for(
+                        'dataset.prediction_preview',
+                        dataset_id=dataset.dataset_id,
+                        filename=prediction.image_preview_filename
+                    ) }}"
+                    class="img-fluid rounded border"
+                    alt="Uploaded coin image used for prediction"
+                    style="max-height: 320px; object-fit: contain;"
+                >
+            {% endif %}
+            <p class="mt-2">
+                <strong>Uploaded file:</strong>
+                {{ prediction.image_filename }}
+            </p>
+        </div>
 
-    <p>
-        <strong>Model Used:</strong>
+        <div class="col-md-7">
+            <p>
+                <strong>Model Used:</strong>
         {{ prediction.model_name }}
     </p>
 
@@ -948,10 +964,12 @@
         </span>
     </p>
 
-    <p>
-        <strong>Confidence:</strong>
-        {{ "%.2f"|format(prediction.confidence_percentage) }}%
-    </p>
+            <p>
+                <strong>Confidence:</strong>
+                {{ "%.2f"|format(prediction.confidence_percentage) }}%
+            </p>
+        </div>
+    </div>
 
     {% endif %}
 </div>
