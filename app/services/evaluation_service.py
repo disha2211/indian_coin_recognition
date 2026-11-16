@@ -6,6 +6,10 @@ import joblib
 import numpy as np
 import tensorflow as tf
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -117,6 +121,54 @@ def _predict_dcnn(model, images, test_indices, batch_size=16):
         )
 
     return np.asarray(predictions, dtype=np.int64)
+
+
+
+def _save_comparison_plot(comparison, evaluation_dir):
+    """Save a grouped metric comparison chart for all evaluated models."""
+
+    model_names = [item["model_name"] for item in comparison["models"]]
+    metric_specs = [
+        ("accuracy", "Accuracy"),
+        ("precision_macro", "Macro Precision"),
+        ("recall_macro", "Macro Recall"),
+        ("f1_macro", "Macro F1-score"),
+    ]
+
+    x = np.arange(len(model_names))
+    width = 0.19
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    for index, (metric_key, label) in enumerate(metric_specs):
+        values = [
+            item[metric_key]
+            for item in comparison["models"]
+        ]
+        offsets = x + (index - 1.5) * width
+        bars = ax.bar(offsets, values, width, label=label)
+        ax.bar_label(
+            bars,
+            labels=[f"{value:.2f}" for value in values],
+            padding=2,
+            fontsize=8,
+        )
+
+    ax.set_title("Four-Model Performance Comparison")
+    ax.set_ylabel("Score")
+    ax.set_xlabel("Model")
+    ax.set_ylim(0, 1.15)
+    ax.set_xticks(x)
+    ax.set_xticklabels(model_names, rotation=12, ha="right")
+    ax.legend(loc="upper left", ncols=2)
+    ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+
+    plot_path = evaluation_dir / "comparison_metrics.png"
+    fig.savefig(plot_path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+    return plot_path.name
 
 
 def evaluate_all_models(dataset_id, dataset_metadata):
@@ -351,9 +403,15 @@ def evaluate_all_models(dataset_id, dataset_metadata):
         evaluation_dir / "comparison.json",
     )
 
+    comparison_plot = _save_comparison_plot(
+        comparison_result,
+        evaluation_dir,
+    )
+
     return {
         "individual_results": results,
         "comparison": comparison_result,
+        "comparison_plot": comparison_plot,
         "evaluation_directory": str(evaluation_dir),
     }
 
