@@ -636,6 +636,21 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <h3>Visual Performance Comparison</h3>
+    <p>
+        Compare accuracy, macro precision, macro recall and macro F1-score
+        across the four models. The best model is selected using macro F1-score.
+    </p>
+    <img
+        src="{{ url_for(
+            'dataset.evaluation_plot',
+            dataset_id=dataset.dataset_id,
+            filename='comparison_metrics.png'
+        ) }}"
+        class="img-fluid"
+        alt="Grouped bar chart comparing four model evaluation metrics"
+    >
 </div>
 <div class="card">
     <h2>Classification Reports</h2>
