@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import shutil
 import json
 import os
 from pathlib import Path
@@ -67,6 +67,52 @@ def _preprocess_image(image_path: Path) -> np.ndarray:
 
     return image
 
+def _save_preview_images(
+    image_path: Path,
+    processed_image: np.ndarray,
+    preview_dir: Path,
+    category_index: int,
+) -> dict:
+    """
+    Save one original and one preprocessed sample image
+    for a dataset category.
+    """
+
+    preview_dir.mkdir(parents=True, exist_ok=True)
+
+    original_filename = f"class_{category_index}_original{image_path.suffix.lower()}"
+    processed_filename = f"class_{category_index}_processed.png"
+
+    original_path = preview_dir / original_filename
+    processed_path = preview_dir / processed_filename
+
+    # Preserve the original image for visualization.
+    shutil.copy2(image_path, original_path)
+
+    # Convert normalized RGB image back to uint8.
+    processed_uint8 = np.clip(
+        processed_image * NORMALIZATION_SCALE,
+        0,
+        255,
+    ).astype(np.uint8)
+
+    # OpenCV expects BGR when saving.
+    processed_bgr = cv2.cvtColor(
+        processed_uint8,
+        cv2.COLOR_RGB2BGR,
+    )
+
+    success = cv2.imwrite(str(processed_path), processed_bgr)
+
+    if not success:
+        raise OSError(
+            f"Unable to save processed preview: {processed_path}"
+        )
+
+    return {
+        "original": str(original_path),
+        "processed": str(processed_path),
+    }
 
 def preprocess_dataset(dataset_metadata: dict) -> dict:
     """
@@ -130,14 +176,19 @@ def preprocess_dataset(dataset_metadata: dict) -> dict:
     failed_count = 0
     failed_samples: list[str] = []
 
+    # Store one original and processed sample per category.
+    preview_dir = processed_dir / "previews"
+    sample_previews = []
+
     # Process one image at a time.
-    for category in categories:
+    for category_index, category in enumerate(categories):
         category_dir = root / category
 
         if not category_dir.exists() or not category_dir.is_dir():
             continue
 
         label = class_mapping[category]
+        preview_saved = False
 
         for image_path in _iter_category_images(category_dir):
 
@@ -153,18 +204,33 @@ def preprocess_dataset(dataset_metadata: dict) -> dict:
                 X[processed_count] = processed_image
                 y[processed_count] = label
 
+                # Save only the first valid sample of each category.
+                if not preview_saved:
+                    preview = _save_preview_images(
+                        image_path=image_path,
+                        processed_image=processed_image,
+                        preview_dir=preview_dir,
+                        category_index=category_index,
+                    )
+
+                    sample_previews.append({
+                        "category": category,
+                        "original": preview["original"],
+                        "processed": preview["processed"],
+                    })
+
+                    preview_saved = True
+
                 processed_count += 1
 
             except (ValueError, OSError, cv2.error) as exc:
                 failed_count += 1
 
                 if len(failed_samples) < 20:
-                    failed_samples.append(
-                        {
-                            "file": str(image_path.relative_to(root)).replace("\\", "/"),
-                            "error": str(exc),
-                        }
-                    )
+                    failed_samples.append({
+                        "file": str(image_path.relative_to(root)).replace("\\", "/"),
+                        "error": str(exc),
+                    })
 
     # Make sure the metadata count and actual processed count agree.
     if processed_count != total_images:
@@ -207,6 +273,7 @@ def preprocess_dataset(dataset_metadata: dict) -> dict:
             "images": str(images_path),
             "labels": str(labels_path),
         },
+        "sample_previews": sample_previews,
         "failed_samples": failed_samples,
     }
 

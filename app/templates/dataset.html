@@ -109,6 +109,59 @@
     </section>
   </div>
 
+  {% if preprocessing.sample_previews %}
+<div class="card">
+    <h2>Original vs Preprocessed Images</h2>
+
+    <p>
+        The following examples show the original dataset images
+        and their corresponding resized, RGB-normalized images.
+    </p>
+
+    {% for preview in preprocessing.sample_previews %}
+
+    <div style="margin-bottom: 30px;">
+
+        <h3>{{ preview.category }}</h3>
+
+        <div class="grid">
+
+            <div>
+                <h4>Original Image</h4>
+
+                <img
+                    src="{{ url_for(
+                        'dataset.preprocessing_preview',
+                        dataset_id=dataset.dataset_id,
+                        filename=preview.original.replace('\\', '/').split('/')[-1]
+                    ) }}"
+                    class="sample"
+                    alt="Original {{ preview.category }} coin image"
+                >
+            </div>
+
+            <div>
+                <h4>Preprocessed Image (128 × 128)</h4>
+
+                <img
+                    src="{{ url_for(
+                        'dataset.preprocessing_preview',
+                        dataset_id=dataset.dataset_id,
+                        filename=preview.processed.replace('\\', '/').split('/')[-1]
+                    ) }}"
+                    class="sample"
+                    alt="Preprocessed {{ preview.category }} coin image"
+                >
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+</div>
+{% endif %}
+
   <div class="card">
     <section>
       <h2>Adaptive Feature Enhancement</h2>

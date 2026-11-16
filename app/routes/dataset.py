@@ -9,7 +9,8 @@ from app.services.evaluation_service import (
     evaluate_all_models,
     load_evaluation_results,
 )
-from flask import send_file
+
+from flask import send_file, send_from_directory
 
 from flask import (
     Blueprint,
@@ -59,6 +60,7 @@ def index():
     current_app.config["CURRENT_MODELS"] = models
     current_app.config["CURRENT_DCNN"] = dcnn
     current_app.config["CURRENT_EVALUATION"] = evaluation
+    current_app.config["CURRENT_PREDICTION"] = prediction
 
     # If DCNN metadata is not present in project state,
     # recover it from the saved DCNN artifact.
@@ -140,9 +142,19 @@ def upload():
         uploaded.save(upload_path)
         metadata = inspect_dataset(upload_path)
 
+        # A new dataset invalidates all previous processing results.
         current_app.config["CURRENT_DATASET"] = metadata
-        current_app.config["CURRENT_PREPROCESSING"] = None
-        current_app.config["CURRENT_PREDICTION"] = None
+
+        for key in (
+            "CURRENT_PREPROCESSING",
+            "CURRENT_AFE",
+            "CURRENT_SPLIT",
+            "CURRENT_MODELS",
+            "CURRENT_DCNN",
+            "CURRENT_EVALUATION",
+            "CURRENT_PREDICTION",
+        ):
+            current_app.config[key] = None
 
         save_project_state(
             {
@@ -190,12 +202,21 @@ def preprocess():
 
         current_app.config["CURRENT_PREPROCESSING"] = metadata
 
-        save_project_state(
-            {
-                "dataset": dataset,
-                "preprocessing": metadata,
-            }
-        )
+        # Reprocessing invalidates all downstream results.
+        for key in (
+            "CURRENT_AFE",
+            "CURRENT_SPLIT",
+            "CURRENT_MODELS",
+            "CURRENT_DCNN",
+            "CURRENT_EVALUATION",
+            "CURRENT_PREDICTION",
+        ):
+            current_app.config[key] = None
+
+        save_project_state({
+            "dataset": dataset,
+            "preprocessing": metadata,
+        })
 
         flash("Image preprocessing completed successfully.", "success")
 
@@ -440,6 +461,43 @@ def dcnn_plot(dataset_id, plot_name):
         return "DCNN plot not found.", 404
 
     return send_file(plot_path)
+
+
+@bp.get("/preprocessing-preview/<dataset_id>/<filename>")
+def preprocessing_preview(dataset_id, filename):
+    """
+    Serve original and preprocessed sample images
+    saved during dataset preprocessing.
+    """
+
+    # Only serve preview files belonging to the active dataset.
+    dataset = current_app.config.get("CURRENT_DATASET")
+
+    if not dataset or dataset.get("dataset_id") != dataset_id:
+        return "Dataset not found.", 404
+
+    preview_dir = (
+        Path(PROCESSED_DIR)
+        / dataset_id
+        / "previews"
+    )
+
+    if not preview_dir.exists():
+        return "Preview images not found.", 404
+
+    # Restrict access to expected preview filenames.
+    if not filename.startswith("class_"):
+        return "Invalid preview filename.", 404
+
+    if not (
+        filename.endswith("_processed.png")
+        or filename.endswith("_original.jpg")
+        or filename.endswith("_original.jpeg")
+        or filename.endswith("_original.png")
+    ):
+        return "Invalid preview filename.", 404
+
+    return send_from_directory(preview_dir, filename)
 
 @bp.post("/evaluate")
 def run_evaluation():
