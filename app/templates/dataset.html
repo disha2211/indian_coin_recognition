@@ -5,16 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dataset Upload | Indian Coin Recognition</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin: 20px 0; }
-    .success { color: #176b35; } .error { color: #a51d2d; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; }
-    .sample { width: 100%; max-height: 180px; object-fit: contain; background: #f4f4f4; }
-    code { background: #f4f4f4; padding: 2px 5px; }
+    :root{--navy:#14243a;--navy2:#1d3553;--teal:#168b83;--ink:#243247;--muted:#718096;--line:#e5eaf0;--paper:#f4f7fa}
+    *{box-sizing:border-box}body{font-family:Inter,Segoe UI,Arial,sans-serif;max-width:none;margin:0;padding:0;background:var(--paper);color:var(--ink);line-height:1.55}
+    .workspace{min-height:100vh;display:grid;grid-template-columns:235px minmax(0,1fr)}.sidebar{background:var(--navy);color:#eaf0f7;padding:26px 17px;position:sticky;top:0;height:100vh}
+    .sidebar .brand{font-size:17px;font-weight:750;line-height:1.35;margin:0 8px 7px}.sidebar .sub{font-size:12px;color:#aebed0;margin:0 8px 26px}
+    .sidebar a{display:block;color:#d8e2ed;text-decoration:none;padding:10px 12px;border-radius:8px;margin:4px 0;font-size:14px}.sidebar a:hover{background:var(--navy2);color:#fff}
+    .workspace main{padding:30px clamp(18px,3.5vw,48px);max-width:1500px;width:100%;min-width:0}
+    h1{font-size:29px;color:var(--navy);margin:0 0 5px}h2{font-size:20px;color:var(--navy);margin-top:0}h3{font-size:16px;color:var(--navy)}
+    p{color:#536276}.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:22px;margin:18px 0;box-shadow:0 5px 18px rgba(20,36,58,.035)}
+    button{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:650;cursor:pointer;margin:5px 5px 5px 0}button:hover{filter:brightness(.94)}
+    input,select{max-width:100%;padding:9px;border:1px solid #ccd5df;border-radius:7px;background:#fff}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+    .success{color:#147365}.error{color:#a51d2d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.sample{width:100%;max-height:180px;object-fit:contain;background:#f4f4f4}
+    code{background:#f0f3f6;padding:2px 5px;border-radius:4px}.sidebar .back{margin-top:22px;color:#b7d9d5}
+    @media(max-width:850px){.workspace{grid-template-columns:1fr}.sidebar{position:relative;height:auto;padding:15px 17px}.sidebar .sub{margin-bottom:8px}.sidebar nav{display:flex;overflow:auto;gap:5px}.sidebar a{white-space:nowrap}.workspace main{padding:20px 14px}}
   </style>
 </head>
 <body>
+<div class="workspace">
+  <aside class="sidebar">
+    <div class="brand">Indian Coin<br>Recognition System</div>
+    <div class="sub">Dataset & model workspace</div>
+    <nav>
+      <a href="{{ url_for('dashboard') }}">← Overview</a>
+      <a href="#dataset-upload">Dataset upload</a>
+      <a href="#preprocessing">Preprocessing</a>
+      <a href="#afe">AFE</a>
+      <a href="#split">Train/test split</a>
+      <a href="#model-training">Model training</a>
+      <a href="#model-evaluation">Evaluation</a>
+      <a href="#saved-models">Saved models</a>
+      <a href="#prediction">Coin prediction</a>
+    </nav>
+  </aside>
+  <main>
   <h1>Indian Coin Recognition</h1>
+  <p>Dataset processing, feature enhancement, model training and inference.</p>
   <p>Module 1 — Dataset Upload and Dataset Preview</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -23,7 +48,7 @@
     {% endfor %}
   {% endwith %}
 
-  <div class="card">
+  <div class="card" id="dataset-upload">
     <h2>Upload Dataset</h2>
     <form action="{{ url_for('dataset.upload') }}" method="post" enctype="multipart/form-data">
       <input type="file" name="dataset" accept=".zip" required>
@@ -42,7 +67,7 @@
     <p><strong>Invalid/corrupt images:</strong> {{ dataset.invalid_image_count }}</p>
   </div>
 
-  <div class="card">
+  <div class="card" id="preprocessing">
     <section>
       <h2>Image Preprocessing</h2>
       <p>
@@ -162,7 +187,7 @@
 </div>
 {% endif %}
 
-  <div class="card">
+  <div class="card" id="afe">
     <section>
       <h2>Adaptive Feature Enhancement</h2>
       <p>
@@ -206,7 +231,7 @@
   </div>
 
   {% if afe %}
-<section>
+<section id="split" class="card">
     <h2>Train/Test Split</h2>
 
     <p>
@@ -263,7 +288,7 @@
 {% endif %}
   {% endif %}
   {% if split %}
-<div class="card">
+<div class="card" id="model-training">
     <h2>Module 5 — Traditional ML Model Training</h2>
 
     <p>
@@ -575,7 +600,7 @@
 </div>
 
 {% if split %}
-<div class="card">
+<div class="card" id="model-evaluation">
     <h2>Module 7 — Model Evaluation</h2>
 
     <p>
@@ -865,7 +890,7 @@
      MODULE 9 — COIN PREDICTION
 ========================= -->
 
-<div class="card">
+<div class="card" id="prediction">
     <h2>Module 9 — Indian Coin Prediction</h2>
 
     <p>
@@ -974,5 +999,7 @@
     {% endif %}
 </div>
 
+  </main>
+</div>
 </body>
 </html>
