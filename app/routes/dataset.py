@@ -660,6 +660,29 @@ def run_evaluation():
 
     return redirect(url_for("dataset.index"))
 
+@bp.get("/prediction-preview/<dataset_id>/<filename>")
+def prediction_preview(dataset_id, filename):
+    """Serve the latest validated prediction image for the active dataset."""
+
+    dataset = current_app.config.get("CURRENT_DATASET")
+    if not dataset or dataset.get("dataset_id") != dataset_id:
+        return "Dataset not found.", 404
+
+    allowed_names = {
+        "prediction_preview.jpg",
+        "prediction_preview.jpeg",
+        "prediction_preview.png",
+    }
+    if filename not in allowed_names:
+        return "Invalid prediction preview.", 404
+
+    preview_dir = Path(PROCESSED_DIR) / dataset_id / "predictions"
+    if not (preview_dir / filename).is_file():
+        return "Prediction preview not found.", 404
+
+    return send_from_directory(preview_dir, filename)
+
+
 @bp.post("/predict")
 def predict():
     dataset = current_app.config.get("CURRENT_DATASET")
@@ -710,6 +733,24 @@ def predict():
         )
 
         result["image_filename"] = original_filename
+
+        # Keep a display copy after the temporary inference file is removed.
+        # The generated filename prevents user-controlled path components.
+        preview_dir = Path(PROCESSED_DIR) / dataset["dataset_id"] / "predictions"
+        preview_dir.mkdir(parents=True, exist_ok=True)
+
+        for old_name in (
+            "prediction_preview.jpg",
+            "prediction_preview.jpeg",
+            "prediction_preview.png",
+        ):
+            (preview_dir / old_name).unlink(missing_ok=True)
+
+        preview_filename = f"prediction_preview{extension}"
+        preview_path = preview_dir / preview_filename
+        uploaded.seek(0)
+        uploaded.save(preview_path)
+        result["image_preview_filename"] = preview_filename
 
         # Preserve all previously completed modules.
         state = load_project_state() or {}
