@@ -25,7 +25,7 @@ from werkzeug.utils import secure_filename
 import json
 from pathlib import Path
 
-from app.config import PROCESSED_DIR
+from app.config import PROCESSED_DIR, MODELS_DIR
 
 from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
@@ -547,7 +547,7 @@ def evaluation_plot(dataset_id, filename):
         return "Invalid evaluation plot.", 404
 
     plot_path = (
-        Path(current_app.config.get("MODELS_DIR", "models"))
+        Path(MODELS_DIR)
         / dataset_id
         / "evaluations"
         / filename
