@@ -3,21 +3,226 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dataset Upload | Indian Coin Recognition</title>
+  <title>Workspace | Indian Coin Recognition</title>
   <style>
-    :root{--navy:#14243a;--navy2:#1d3553;--teal:#168b83;--ink:#243247;--muted:#718096;--line:#e5eaf0;--paper:#f4f7fa}
-    *{box-sizing:border-box}body{font-family:Inter,Segoe UI,Arial,sans-serif;max-width:none;margin:0;padding:0;background:var(--paper);color:var(--ink);line-height:1.55}
-    .workspace{min-height:100vh;display:grid;grid-template-columns:235px minmax(0,1fr)}.sidebar{background:var(--navy);color:#eaf0f7;padding:26px 17px;position:sticky;top:0;height:100vh}
-    .sidebar .brand{font-size:17px;font-weight:750;line-height:1.35;margin:0 8px 7px}.sidebar .sub{font-size:12px;color:#aebed0;margin:0 8px 26px}
-    .sidebar a{display:block;color:#d8e2ed;text-decoration:none;padding:10px 12px;border-radius:8px;margin:4px 0;font-size:14px}.sidebar a:hover{background:var(--navy2);color:#fff}
-    .workspace main{padding:30px clamp(18px,3.5vw,48px);max-width:1500px;width:100%;min-width:0}
-    h1{font-size:29px;color:var(--navy);margin:0 0 5px}h2{font-size:20px;color:var(--navy);margin-top:0}h3{font-size:16px;color:var(--navy)}
-    p{color:#536276}.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:22px;margin:18px 0;box-shadow:0 5px 18px rgba(20,36,58,.035)}
-    button{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:650;cursor:pointer;margin:5px 5px 5px 0}button:hover{filter:brightness(.94)}
-    input,select{max-width:100%;padding:9px;border:1px solid #ccd5df;border-radius:7px;background:#fff}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-    .success{color:#147365}.error{color:#a51d2d}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.sample{width:100%;max-height:180px;object-fit:contain;background:#f4f4f4}
-    code{background:#f0f3f6;padding:2px 5px;border-radius:4px}.sidebar .back{margin-top:22px;color:#b7d9d5}
-    @media(max-width:850px){.workspace{grid-template-columns:1fr}.sidebar{position:relative;height:auto;padding:15px 17px}.sidebar .sub{margin-bottom:8px}.sidebar nav{display:flex;overflow:auto;gap:5px}.sidebar a{white-space:nowrap}.workspace main{padding:20px 14px}}
+    :root {
+      --navy: #14243a;
+      --navy-soft: #1d3553;
+      --teal: #168b83;
+      --teal-dark: #11736d;
+      --ink: #243247;
+      --muted: #718096;
+      --line: #e5eaf0;
+      --paper: #f4f7fa;
+      --white: #ffffff;
+      --success-bg: #e7f5f0;
+      --danger-bg: #fff0f0;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 22px; }
+    body {
+      margin: 0;
+      padding: 0;
+      max-width: none;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.6 Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 26px 17px;
+      background: var(--navy);
+      color: #eaf0f7;
+    }
+    .sidebar .brand {
+      margin: 0 8px 7px;
+      font-size: 17px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+    .sidebar .sub {
+      margin: 0 8px 26px;
+      color: #aebed0;
+      font-size: 12px;
+    }
+    .sidebar nav { display: grid; gap: 4px; }
+    .sidebar a {
+      display: block;
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #d8e2ed;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background .15s ease, color .15s ease;
+    }
+    .sidebar a:hover, .sidebar a:focus-visible {
+      background: var(--navy-soft);
+      color: var(--white);
+    }
+
+    .workspace main {
+      width: 100%;
+      min-width: 0;
+      max-width: 1500px;
+      padding: 34px clamp(18px, 3.5vw, 48px);
+    }
+    .page-heading { margin-bottom: 24px; }
+    h1 { margin: 0 0 5px; color: var(--navy); font-size: 29px; line-height: 1.25; }
+    h2 { margin: 0 0 12px; color: var(--navy); font-size: 20px; line-height: 1.35; }
+    h3 { margin: 18px 0 9px; color: var(--navy); font-size: 16px; }
+    h4, h5 { margin: 14px 0 8px; color: var(--navy); }
+    p { margin: 8px 0; color: #536276; }
+    .muted, .section-intro { color: var(--muted); }
+    .section-intro { margin: -3px 0 16px; }
+
+    .card {
+      margin: 18px 0;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--white);
+      box-shadow: 0 5px 18px rgba(20, 36, 58, .035);
+    }
+    .card > :first-child { margin-top: 0; }
+    .card > :last-child { margin-bottom: 0; }
+    .card .card { margin: 12px 0; box-shadow: none; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .stat-card, .model-card {
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfd;
+    }
+    .stat-card small { display: block; color: var(--muted); }
+    .stat-card strong { display: block; margin-top: 4px; color: var(--navy); font-size: 21px; }
+    .model-card h3 { margin-top: 0; }
+
+    button {
+      margin: 5px 6px 5px 0;
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--teal);
+      color: var(--white);
+      font-weight: 650;
+      cursor: pointer;
+      transition: background .15s ease;
+    }
+    button:hover { background: var(--teal-dark); }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(22, 139, 131, .22);
+      outline-offset: 2px;
+    }
+    input, select {
+      max-width: 100%;
+      padding: 10px 11px;
+      border: 1px solid #ccd5df;
+      border-radius: 7px;
+      background: var(--white);
+      color: var(--ink);
+    }
+    label { display: inline-block; margin-bottom: 5px; font-weight: 650; }
+    .form-field { margin: 0 0 16px; }
+
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f7f9fb; color: var(--navy); font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    code { padding: 2px 5px; border-radius: 4px; background: #f0f3f6; overflow-wrap: anywhere; }
+
+    .success { color: #147365; }
+    .error { color: #a51d2d; }
+    .alert {
+      margin: 12px 0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #edf4f8;
+      color: #38546a;
+    }
+    .alert-success { background: var(--success-bg); color: #147365; }
+    .alert-danger { background: var(--danger-bg); color: #a51d2d; }
+    .badge {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: #edf1f5;
+      color: #536276;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .badge.bg-success { background: var(--success-bg); color: #147365; }
+    .badge.bg-warning { background: #fff5dc; color: #8a6518; }
+    .badge.bg-danger { background: var(--danger-bg); color: #a51d2d; }
+
+    .sample {
+      display: block;
+      width: 100%;
+      max-height: 190px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #f4f6f8;
+    }
+    .result-image {
+      display: block;
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f7f9fb;
+    }
+    .chart-image { display: block; width: 100%; height: auto; }
+    .flash-message { margin: 10px 0; padding: 11px 14px; border-radius: 8px; background: #fff; border: 1px solid var(--line); }
+    .flash-message.success { background: var(--success-bg); }
+    .flash-message.error { background: var(--danger-bg); }
+    hr { margin: 22px 0; border: 0; border-top: 1px solid var(--line); }
+
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; padding: 15px 17px; }
+      .sidebar .sub { margin-bottom: 9px; }
+      .sidebar nav { display: flex; gap: 5px; overflow-x: auto; }
+      .sidebar a { flex: 0 0 auto; white-space: nowrap; }
+      .workspace main { padding: 24px 16px; }
+    }
+    @media (max-width: 620px) {
+      .two-column { grid-template-columns: 1fr; }
+      .card { padding: 17px; }
+      h1 { font-size: 25px; }
+      th, td { padding: 8px 9px; }
+    }
   </style>
 </head>
 <body>
@@ -38,13 +243,14 @@
     </nav>
   </aside>
   <main>
-  <h1>Indian Coin Recognition</h1>
-  <p>Dataset processing, feature enhancement, model training and inference.</p>
-  <p>Module 1 — Dataset Upload and Dataset Preview</p>
+  <header class="page-heading">
+    <h1>Dataset & Model Workspace</h1>
+    <p class="muted">Manage your coin dataset, train recognition models and inspect results.</p>
+  </header>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
-      <p class="{{ category }}"><strong>{{ message }}</strong></p>
+      <div class="flash-message {{ category }}"><strong>{{ message }}</strong></div>
     {% endfor %}
   {% endwith %}
 
@@ -59,13 +265,15 @@
   </div>
 
   {% if dataset %}
-  <div class="card">
-    <h2>Dataset Summary</h2>
-    <p><strong>Categories:</strong> {{ dataset.categories|length }}</p>
-    <p><strong>Total valid images:</strong> {{ dataset.total_images }}</p>
-    <p><strong>Image files found:</strong> {{ dataset.total_image_candidates }}</p>
-    <p><strong>Invalid/corrupt images:</strong> {{ dataset.invalid_image_count }}</p>
-  </div>
+  <section class="card">
+    <h2>Dataset Overview</h2>
+    <div class="stat-grid">
+      <div class="stat-card"><small>Categories</small><strong>{{ dataset.categories|length }}</strong></div>
+      <div class="stat-card"><small>Valid images</small><strong>{{ dataset.total_images }}</strong></div>
+      <div class="stat-card"><small>Image files found</small><strong>{{ dataset.total_image_candidates }}</strong></div>
+      <div class="stat-card"><small>Invalid / corrupt</small><strong>{{ dataset.invalid_image_count }}</strong></div>
+    </div>
+  </section>
 
   <div class="card" id="preprocessing">
     <section>
@@ -106,31 +314,14 @@
   <div class="card">
     <section>
       <h2>Preprocessing Results</h2>
-      <p>
-          <strong>Processed images:</strong>
-          {{ preprocessing.processed_images }}
-      </p>
-      <p>
-          <strong>Failed images:</strong>
-          {{ preprocessing.failed_images }}
-      </p>
-      <p>
-          <strong>Image size:</strong>
-          {{ preprocessing.image_size[0] }} ×
-          {{ preprocessing.image_size[1] }}
-      </p>
-      <p>
-          <strong>Color format:</strong>
-          {{ preprocessing.color_format }}
-      </p>
-      <p>
-          <strong>Data type:</strong>
-          {{ preprocessing.dtype }}
-      </p>
-      <p>
-          <strong>Normalization:</strong>
-          {{ preprocessing.normalization.method }}
-      </p>
+      <div class="stat-grid">
+        <div class="stat-card"><small>Processed images</small><strong>{{ preprocessing.processed_images }}</strong></div>
+        <div class="stat-card"><small>Failed images</small><strong>{{ preprocessing.failed_images }}</strong></div>
+        <div class="stat-card"><small>Image size</small><strong>{{ preprocessing.image_size[0] }} × {{ preprocessing.image_size[1] }}</strong></div>
+        <div class="stat-card"><small>Color format</small><strong>{{ preprocessing.color_format }}</strong></div>
+        <div class="stat-card"><small>Data type</small><strong>{{ preprocessing.dtype }}</strong></div>
+        <div class="stat-card"><small>Normalization</small><strong>{{ preprocessing.normalization.method }}</strong></div>
+      </div>
     </section>
   </div>
 
@@ -381,12 +572,12 @@
      MODULE 6 — DCNN
 ========================= -->
 
-<div class="card mt-4">
-    <div class="card-header">
+<div class="card">
+    <div class="section-heading">
         <h3>Module 6 — Proposed DCNN</h3>
     </div>
 
-    <div class="card-body">
+    <div class="section-body">
 
         <p>
             The DCNN uses the same AFE CLAHE enhancement stage as its image input.
@@ -402,9 +593,9 @@
                 </button>
             </form>
         {% else %}
-            <p class="alert alert-info">
+            <div class="alert">
                 Complete preprocessing, AFE and train/test splitting to enable DCNN training.
-            </p>
+            </div>
         {% endif %}
 
         {% if dcnn %}
@@ -414,12 +605,12 @@
                 {{ dcnn.status|capitalize }}
             </div>
 
-            <div class="row">
+            <div class="two-column">
 
-                <div class="col-md-6">
+                <div class="model-card">
                     <h5>Model Information</h5>
 
-                    <table class="table table-bordered">
+                    <table class="data-table">
                         <tbody>
                             <tr>
                                 <th>Model Name</th>
@@ -455,7 +646,7 @@
                 </div>
 
 
-                <div class="col-md-6">
+                <div class="model-card">
                     <h5>Training Information</h5>
 
                     <table class="table table-bordered">
@@ -501,11 +692,10 @@
             </div>
 
 
-            <div class="row mt-3">
+            <div class="two-column">
 
                 <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body text-center">
+                    <div class="stat-card">
                             <h5>Best Validation Accuracy</h5>
 
                             <h2>
@@ -513,7 +703,6 @@
                                     dcnn.best_validation_accuracy * 100
                                 ) }}%
                             </h2>
-                        </div>
                     </div>
                 </div>
 
@@ -535,7 +724,7 @@
             </div>
 
 
-            <div class="mt-4">
+            <div class="form-field">
                 <h5>Class Weights</h5>
 
                 <table class="table table-bordered">
@@ -567,7 +756,7 @@
                         dataset_id=dataset.dataset_id,
                         plot_name='accuracy_plot.png'
                     ) }}"
-                    class="img-fluid"
+                    class="chart-image"
                     alt="DCNN training and validation accuracy"
                 >
             </div>
@@ -582,7 +771,7 @@
                         dataset_id=dataset.dataset_id,
                         plot_name='loss_plot.png'
                     ) }}"
-                    class="img-fluid"
+                    class="chart-image"
                     alt="DCNN training and validation loss"
                 >
             </div>
@@ -590,7 +779,7 @@
 
         {% else %}
 
-            <div class="alert alert-info">
+            <div class="alert">
                 DCNN training has not been completed for the current dataset.
             </div>
 
@@ -626,17 +815,11 @@
         {{ evaluation.comparison.test_samples }}
     </p>
 
-    <p>
-        <strong>Best model:</strong>
-        {{ evaluation.comparison.best_model.model_name }}
-    </p>
+    <p><strong>Best model:</strong> {{ evaluation.comparison.best_model.model_name }} <span class="badge">Highest macro F1</span></p>
 
-    <p>
-        <strong>Selection metric:</strong>
-        Macro F1-score
-    </p>
+    <p><strong>Selected by:</strong> Macro F1-score</p>
 
-    <h3>Performance Comparison</h3>
+    <h3>Metric Comparison</h3>
 
     <table>
         <thead>
@@ -662,18 +845,15 @@
         </tbody>
     </table>
 
-    <h3>Visual Performance Comparison</h3>
-    <p>
-        Compare accuracy, macro precision, macro recall and macro F1-score
-        across the four models. The best model is selected using macro F1-score.
-    </p>
-    <img
+    <h3>Performance Chart</h3>
+    <p class="section-intro">Four evaluation metrics compared across all trained models.</p>
+    <img class="chart-image"
         src="{{ url_for(
             'dataset.evaluation_plot',
             dataset_id=dataset.dataset_id,
             filename='comparison_metrics.png'
         ) }}"
-        class="img-fluid"
+        class="chart-image"
         alt="Grouped bar chart comparing four model evaluation metrics"
     >
 </div>
@@ -685,27 +865,7 @@
     <section>
         <h3>{{ result.model_name }}</h3>
 
-        <p>
-            <strong>Accuracy:</strong>
-            {{ "%.4f"|format(result.accuracy) }}
-        </p>
-
-        <p>
-            <strong>Macro Precision:</strong>
-            {{ "%.4f"|format(result.precision_macro) }}
-        </p>
-
-        <p>
-            <strong>Macro Recall:</strong>
-            {{ "%.4f"|format(result.recall_macro) }}
-        </p>
-
-        <p>
-            <strong>Macro F1-score:</strong>
-            {{ "%.4f"|format(result.f1_macro) }}
-        </p>
-
-        <h4>Per-Class Metrics</h4>
+        <h4>Per-Class Performance</h4>
 
         <table>
             <thead>
@@ -797,7 +957,7 @@
                 exists and can be loaded successfully.
             </p>
 
-            <div class="table-responsive">
+            <div class="table-wrap">
 
                 <table class="table table-bordered">
 
@@ -903,12 +1063,12 @@
         action="{{ url_for('dataset.predict') }}"
         enctype="multipart/form-data"
     >
-        <div style="margin-bottom: 15px;">
+        <div class="form-field">
             <label for="coin_image">
                 <strong>Select Coin Image:</strong>
             </label>
 
-            <br><br>
+            
 
             <input
                 type="file"
@@ -955,8 +1115,8 @@
 
     <h3>Prediction Results</h3>
 
-    <div class="row align-items-start">
-        <div class="col-md-5 mb-3">
+    <div class="two-column">
+        <div class="model-card">
             {% if prediction.image_preview_filename %}
                 <img
                     src="{{ url_for(
@@ -964,9 +1124,8 @@
                         dataset_id=dataset.dataset_id,
                         filename=prediction.image_preview_filename
                     ) }}"
-                    class="img-fluid rounded border"
+                    class="result-image"
                     alt="Uploaded coin image used for prediction"
-                    style="max-height: 320px; object-fit: contain;"
                 >
             {% endif %}
             <p class="mt-2">
@@ -975,7 +1134,7 @@
             </p>
         </div>
 
-        <div class="col-md-7">
+        <div class="model-card">
             <p>
                 <strong>Model Used:</strong>
         {{ prediction.model_name }}
