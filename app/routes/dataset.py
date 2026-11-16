@@ -31,6 +31,11 @@ from app.config import UPLOAD_DIR
 from app.services.dataset_service import inspect_dataset
 from app.services.preprocessing_service import preprocess_dataset
 from app.services.state_service import load_project_state, save_project_state
+from app.services.dcnn_service import (
+    prepare_dcnn_images,
+    train_coin_dcnn,
+    save_dcnn_training_plots,
+)
 
 bp = Blueprint("dataset", __name__)
 
@@ -438,6 +443,73 @@ def train_model(model_key):
         )
 
     return redirect(url_for("dataset.index"))
+
+@bp.post("/train/dcnn")
+def train_dcnn():
+    """Prepare AFE-enhanced images and train or reuse the proposed DCNN."""
+
+    dataset = current_app.config.get("CURRENT_DATASET")
+    preprocessing = current_app.config.get("CURRENT_PREPROCESSING")
+    afe = current_app.config.get("CURRENT_AFE")
+    split = current_app.config.get("CURRENT_SPLIT")
+
+    if not dataset:
+        flash("Please upload a dataset first.", "error")
+        return redirect(url_for("dataset.index"))
+
+    if not preprocessing or not afe or not split:
+        flash(
+            "Complete preprocessing, AFE and train/test splitting before training the DCNN.",
+            "error",
+        )
+        return redirect(url_for("dataset.index"))
+
+    try:
+        dataset_id = dataset["dataset_id"]
+        force_retrain = request.form.get("force_retrain") == "1"
+
+        # Generate the CLAHE-enhanced grayscale input array once.
+        image_metadata = prepare_dcnn_images(dataset_id)
+
+        # Train using the existing saved training/test indices.
+        result = train_coin_dcnn(
+            dataset_id=dataset_id,
+            force_retrain=force_retrain,
+        )
+
+        # Save accuracy/loss plots from the persisted training history.
+        plot_metadata = save_dcnn_training_plots(dataset_id)
+        result["input_preparation"] = image_metadata
+        result["plots"] = plot_metadata
+
+        state = load_project_state() or {}
+        state["dataset"] = dataset
+        state["preprocessing"] = preprocessing
+        state["afe"] = afe
+        state["split"] = split
+        state["dcnn"] = result
+        save_project_state(state)
+
+        current_app.config["CURRENT_DCNN"] = result
+
+        if result.get("status") == "reused":
+            flash("Saved DCNN model loaded successfully. No retraining was needed.", "success")
+        else:
+            flash("DCNN training completed and the model was saved successfully.", "success")
+
+    except (FileNotFoundError, ValueError) as exc:
+        current_app.logger.exception("DCNN training validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("DCNN training failed")
+        flash(
+            "DCNN training failed. Check the application logs and available memory/disk space.",
+            "error",
+        )
+
+    return redirect(url_for("dataset.index"))
+
 
 @bp.route("/dcnn-plot/<dataset_id>/<plot_name>")
 def dcnn_plot(dataset_id, plot_name):
