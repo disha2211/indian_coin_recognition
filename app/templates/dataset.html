@@ -363,6 +363,25 @@
 
     <div class="card-body">
 
+        <p>
+            The DCNN uses the same AFE CLAHE enhancement stage as its image input.
+            It trains on the saved training split, reserves validation samples
+            from training data, and keeps the held-out test split untouched.
+        </p>
+
+        {% if split %}
+            <form method="POST" action="{{ url_for('dataset.train_dcnn') }}">
+                <button type="submit">Train / Load Proposed DCNN</button>
+                <button type="submit" name="force_retrain" value="1">
+                    Retrain DCNN
+                </button>
+            </form>
+        {% else %}
+            <p class="alert alert-info">
+                Complete preprocessing, AFE and train/test splitting to enable DCNN training.
+            </p>
+        {% endif %}
+
         {% if dcnn %}
 
             <div class="alert alert-success">
