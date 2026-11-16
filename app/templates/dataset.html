@@ -667,5 +667,112 @@
 </div>
 {% endif %}
 
+<!-- =========================
+     MODULE 8 — SAVED MODELS
+========================= -->
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Module 8 — Saved Models</h3>
+    </div>
+
+    <div class="card-body">
+
+        {% if saved_models %}
+
+            <p>
+                The application verifies that each trained model
+                exists and can be loaded successfully.
+            </p>
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered">
+
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>File</th>
+                            <th>Exists</th>
+                            <th>Loadable</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for model_key, model in saved_models.items() %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ model.model_name }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ model.filename }}
+                            </td>
+
+                            <td>
+                                {% if model.exists %}
+                                    ✓
+                                {% else %}
+                                    ✗
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if model.loadable %}
+                                    ✓
+                                {% else %}
+                                    ✗
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if model.status == "ready" %}
+
+                                    <span class="badge bg-success">
+                                        Ready
+                                    </span>
+
+                                {% elif model.status == "missing" %}
+
+                                    <span class="badge bg-warning">
+                                        Missing
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">
+                                        Load Error
+                                    </span>
+
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="alert alert-info">
+                No saved models are available for the current dataset.
+            </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
 </body>
 </html>

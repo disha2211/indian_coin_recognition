@@ -172,11 +172,34 @@ def evaluate_all_models(dataset_id, dataset_metadata):
 
     classes = np.unique(labels)
 
-    # Dataset category names are ordered to match the
-    # sorted numeric class-label mapping.
-    class_names = sorted(
-        dataset_metadata["categories"].keys()
-    )
+    # Load the authoritative category-to-label mapping
+    # created during preprocessing.
+    class_mapping_path = processed_dir / "class_mapping.json"
+
+    if not class_mapping_path.exists():
+        raise FileNotFoundError(
+            f"Class mapping file not found: {class_mapping_path}"
+        )
+
+    with open(class_mapping_path, "r", encoding="utf-8") as file:
+        class_mapping = json.load(file)
+
+    # Convert category -> label into label -> category.
+    label_to_category = {
+        int(label): category
+        for category, label in class_mapping.items()
+    }
+
+    # Ensure every numeric label has a corresponding category.
+    if set(classes.tolist()) != set(label_to_category.keys()):
+        raise ValueError(
+            "Saved class mapping does not match the labels in the dataset."
+        )
+
+    class_names = [
+        label_to_category[int(label)]
+        for label in classes
+    ]
 
     if len(classes) != len(class_names):
         raise ValueError(

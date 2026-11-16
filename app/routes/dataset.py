@@ -2,6 +2,7 @@ from uuid import uuid4
 from app.services.afe_service import extract_afe_dataset
 from app.services.split_service import create_or_load_split
 from app.services.model_training_service import train_classical_model
+from app.services.model_registry_service import inspect_saved_models
 
 from app.services.evaluation_service import (
     evaluate_all_models,
@@ -45,7 +46,7 @@ def index():
     afe = state.get("afe")
     split = state.get("split")
     models = state.get("models", {})
-    dcnn = current_app.config.get("CURRENT_DCNN")
+    dcnn = state.get("dcnn")
     evaluation = state.get("evaluation")
 
     # Restore all modules into Flask application state.
@@ -54,39 +55,54 @@ def index():
     current_app.config["CURRENT_AFE"] = afe
     current_app.config["CURRENT_SPLIT"] = split
     current_app.config["CURRENT_MODELS"] = models
+    current_app.config["CURRENT_DCNN"] = dcnn
     current_app.config["CURRENT_EVALUATION"] = evaluation
 
-    # Load saved DCNN metadata if it is not already in memory.
+    # If DCNN metadata is not present in project state,
+    # recover it from the saved DCNN artifact.
     if dataset and dcnn is None:
         dcnn_metadata_path = (
-        Path(PROCESSED_DIR)
-        / dataset["dataset_id"]
-        / "dcnn"
-        / "dcnn_model_metadata.json"
-    )
+            Path(PROCESSED_DIR)
+            / dataset["dataset_id"]
+            / "dcnn"
+            / "dcnn_model_metadata.json"
+        )
 
-    if dcnn_metadata_path.exists():
-        try:
-            with open(
-                dcnn_metadata_path,
-                "r",
-                encoding="utf-8",
-            ) as file:
-                dcnn = json.load(file)
+        if dcnn_metadata_path.exists():
+            try:
+                with open(
+                    dcnn_metadata_path,
+                    "r",
+                    encoding="utf-8",
+                ) as file:
+                    dcnn = json.load(file)
 
-            current_app.config["CURRENT_DCNN"] = dcnn
+                current_app.config["CURRENT_DCNN"] = dcnn
 
-        except (OSError, json.JSONDecodeError):
-            dcnn = None
+                # Persist the recovered DCNN metadata so future
+                # application restarts can load it directly.
+                state["dcnn"] = dcnn
+                save_project_state(state)
 
+            except (OSError, json.JSONDecodeError):
+                dcnn = None
+
+    # Evaluation reports are stored as dedicated artifacts.
     if dataset:
         saved_evaluation = load_evaluation_results(
-        dataset["dataset_id"]
-    )
+            dataset["dataset_id"]
+        )
 
-    if saved_evaluation:
-        evaluation = saved_evaluation
-        current_app.config["CURRENT_EVALUATION"] = evaluation
+        if saved_evaluation:
+            evaluation = saved_evaluation
+            current_app.config["CURRENT_EVALUATION"] = evaluation
+
+    saved_models = {}
+
+    if dataset:
+        saved_models = inspect_saved_models(
+            dataset["dataset_id"]
+        )
 
     return render_template(
         "dataset.html",
@@ -97,6 +113,7 @@ def index():
         models=models,
         dcnn=dcnn,
         evaluation=evaluation,
+        saved_models=saved_models,
     )
 
 @bp.post("/upload")
