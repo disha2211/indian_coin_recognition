@@ -535,6 +535,30 @@ def dcnn_plot(dataset_id, plot_name):
     return send_file(plot_path)
 
 
+@bp.get("/evaluation-plot/<dataset_id>/<filename>")
+def evaluation_plot(dataset_id, filename):
+    """Serve only the generated comparison plot for the active dataset."""
+
+    dataset = current_app.config.get("CURRENT_DATASET")
+    if not dataset or dataset.get("dataset_id") != dataset_id:
+        return "Dataset not found.", 404
+
+    if filename != "comparison_metrics.png":
+        return "Invalid evaluation plot.", 404
+
+    plot_path = (
+        Path(current_app.config.get("MODELS_DIR", "models"))
+        / dataset_id
+        / "evaluations"
+        / filename
+    )
+
+    if not plot_path.exists():
+        return "Evaluation plot not found.", 404
+
+    return send_file(plot_path)
+
+
 @bp.get("/preprocessing-preview/<dataset_id>/<filename>")
 def preprocessing_preview(dataset_id, filename):
     """
