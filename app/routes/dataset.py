@@ -3,6 +3,7 @@ from app.services.afe_service import extract_afe_dataset
 from app.services.split_service import create_or_load_split
 from app.services.model_training_service import train_classical_model
 from app.services.model_registry_service import inspect_saved_models
+from app.services.prediction_service import predict_coin
 
 from app.services.evaluation_service import (
     evaluate_all_models,
@@ -48,6 +49,7 @@ def index():
     models = state.get("models", {})
     dcnn = state.get("dcnn")
     evaluation = state.get("evaluation")
+    prediction = state.get("prediction")
 
     # Restore all modules into Flask application state.
     current_app.config["CURRENT_DATASET"] = dataset
@@ -114,6 +116,7 @@ def index():
         dcnn=dcnn,
         evaluation=evaluation,
         saved_models=saved_models,
+        prediction=prediction,
     )
 
 @bp.post("/upload")
@@ -139,6 +142,7 @@ def upload():
 
         current_app.config["CURRENT_DATASET"] = metadata
         current_app.config["CURRENT_PREPROCESSING"] = None
+        current_app.config["CURRENT_PREDICTION"] = None
 
         save_project_state(
             {
@@ -499,5 +503,84 @@ def run_evaluation():
             "Model evaluation failed. Check the application logs.",
             "error",
         )
+
+    return redirect(url_for("dataset.index"))
+
+@bp.post("/predict")
+def predict():
+    dataset = current_app.config.get("CURRENT_DATASET")
+
+    if not dataset:
+        flash("Please upload a dataset before predicting.", "error")
+        return redirect(url_for("dataset.index"))
+
+    uploaded = request.files.get("coin_image")
+
+    if not uploaded or not uploaded.filename:
+        flash("Please select a coin image.", "error")
+        return redirect(url_for("dataset.index"))
+
+    allowed_extensions = {".jpg", ".jpeg", ".png"}
+
+    original_filename = secure_filename(uploaded.filename)
+    extension = Path(original_filename).suffix.lower()
+
+    if extension not in allowed_extensions:
+        flash("Only JPG, JPEG and PNG images are supported.", "error")
+        return redirect(url_for("dataset.index"))
+
+    model_key = request.form.get("model_key", "random_forest")
+
+    allowed_models = {
+        "naive_bayes",
+        "decision_tree",
+        "random_forest",
+        "dcnn",
+    }
+
+    if model_key not in allowed_models:
+        flash("Invalid prediction model selected.", "error")
+        return redirect(url_for("dataset.index"))
+
+    image_path = UPLOAD_DIR / f"{uuid4().hex}_{original_filename}"
+
+    try:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+        uploaded.save(image_path)
+
+        result = predict_coin(
+            image_path=image_path,
+            dataset_id=dataset["dataset_id"],
+            model_key=model_key,
+        )
+
+        result["image_filename"] = original_filename
+
+        # Preserve all previously completed modules.
+        state = load_project_state() or {}
+
+        state["prediction"] = result
+
+        save_project_state(state)
+
+        current_app.config["CURRENT_PREDICTION"] = result
+
+        flash("Coin prediction completed successfully.", "success")
+
+    except (FileNotFoundError, ValueError) as exc:
+        current_app.logger.exception("Coin prediction validation failed")
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Coin prediction failed")
+        flash(
+            "Coin prediction failed. Check the application logs.",
+            "error",
+        )
+
+    finally:
+        if image_path.exists():
+            image_path.unlink(missing_ok=True)
 
     return redirect(url_for("dataset.index"))

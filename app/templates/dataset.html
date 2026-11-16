@@ -774,5 +774,100 @@
     </div>
 </div>
 
+<!-- =========================
+     MODULE 9 — COIN PREDICTION
+========================= -->
+
+<div class="card">
+    <h2>Module 9 — Indian Coin Prediction</h2>
+
+    <p>
+        Upload an individual coin image and select a trained
+        machine learning model to identify its denomination.
+    </p>
+
+    <form
+        method="POST"
+        action="{{ url_for('dataset.predict') }}"
+        enctype="multipart/form-data"
+    >
+        <div style="margin-bottom: 15px;">
+            <label for="coin_image">
+                <strong>Select Coin Image:</strong>
+            </label>
+
+            <br><br>
+
+            <input
+                type="file"
+                id="coin_image"
+                name="coin_image"
+                accept=".jpg,.jpeg,.png"
+                required
+            >
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="model_key">
+                <strong>Select Prediction Model:</strong>
+            </label>
+
+            <br><br>
+
+            <select id="model_key" name="model_key" required>
+                <option value="random_forest" selected>
+                    Random Forest (Recommended)
+                </option>
+
+                <option value="decision_tree">
+                    Decision Tree
+                </option>
+
+                <option value="naive_bayes">
+                    Multinomial Naive Bayes
+                </option>
+
+                <option value="dcnn">
+                    AFE-Enhanced DCNN
+                </option>
+            </select>
+        </div>
+
+        <button type="submit">
+            Predict Coin
+        </button>
+    </form>
+
+    {% if prediction %}
+    <hr>
+
+    <h3>Prediction Results</h3>
+
+    <p>
+        <strong>Image:</strong>
+        {{ prediction.image_filename }}
+    </p>
+
+    <p>
+        <strong>Model Used:</strong>
+        {{ prediction.model_name }}
+    </p>
+
+    <p>
+        <strong>Predicted Denomination:</strong>
+
+        <span class="success">
+            <strong>{{ prediction.predicted_category }}</strong>
+        </span>
+    </p>
+
+    <p>
+        <strong>Confidence:</strong>
+        {{ "%.2f"|format(prediction.confidence_percentage) }}%
+    </p>
+
+    {% endif %}
+</div>
+
 </body>
 </html>
