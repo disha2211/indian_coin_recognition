@@ -268,4 +268,6 @@ Upload and extraction limits can be overridden using the environment variables `
 
 ## License
 
-No license file is currently specified in this repository. Add a license before redistributing the project if you intend to grant reuse rights.
+## License
+
+This project is licensed under the terms of the [MIT license](https://github.com/disha2211/indian_coin_recognition/tree/main#).
